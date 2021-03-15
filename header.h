@@ -56,13 +56,7 @@ void doesSymbolExist(char * label, int line);
 symbol * searchSymbol(char * label);
 void updateDataSymbols(int IC);
 
-/*dataList.c functions*/
-void addNumber(char * number, int line, int * DC);
-void splitNumbers(int line, int * DC);
-void freeData();
-void addString(int line, int *DC);
-data * getHeadData();
-void updateDataAddresses(int IC);
+
 
 /*utilsFirstPass.c*/
 int isLegalLabel(char *token, int lineNumber);
