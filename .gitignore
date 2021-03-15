@@ -1,0 +1,6 @@
+*.o
+out
+*.ob
+*.ent
+*.exe
+*.ext
