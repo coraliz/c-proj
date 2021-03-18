@@ -9,6 +9,11 @@
 #include "wordsList.h"
 #include "utilsFirstPass.h"
 
+/*files extensions*/
+#define AS_EXTENSION ".as"
+#define OB_EXTENSION ".ob"
+#define ENT_EXTENSION ".ent"
+#define EXT_EXTENSION ".ext"
 
 /*functions*/
 FILE * openFile(char* filename, char * mode, char * extension);

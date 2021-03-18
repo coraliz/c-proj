@@ -33,19 +33,16 @@ int isLegalLabel(char *token, int lineNumber)
   /*check if first char is letter*/
   if (!isalpha((int)*token))
   {
-    addError("Labels must start with a letter", lineNumber, token);
     printf("\tERROR: the label \'%s\' must start with a letter (line %d)\n", token, lineNumber);
     return false;
   }
   else if (tokenLength > MAX_LABEL_LENGTH)
   {
-    addError("label is too long character", lineNumber, token);
     printf("\tERROR: the label \'%s\' is a too long string (line %d)\n", token, lineNumber);
     return false;
   }
   else if (isOperation(token) || isRegister(token) || isDirective(token))
   {
-    addError("This label name is reserved", lineNumber, token);
     printf("\tERROR: \'%s\' is a reserved label (line %d)\n", token, lineNumber);
     return false;
   }
@@ -57,8 +54,7 @@ int isLegalLabel(char *token, int lineNumber)
       if (!isalpha(currentChar) && !isdigit(currentChar))
       {
         /* this is not an alpha and not a digit*/
-        addError("Invalid character", lineNumber, token);
-        printf("\tERROR: \'%c\' is an invalid char (line %d)\n", currentChar, lineNumber);
+        printf("\tERROR: \'%c\' is an invalid character (line %d)\n", currentChar, lineNumber);
         return false;
       }
     }
@@ -127,11 +123,11 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
   {
     return true;
   }
+
   /*get th first char*/
   ignoreWhiteSpaces(&i, commandLine);
   if (iscomma(commandLine[i]))
   {
-    addError("The command parameters cannot start with a comma", fileLineNumber, NULL);
     printf("\tERROR: The command parameters cannot start with a comma (line %d).\n", fileLineNumber);
     return false;
   }
@@ -147,6 +143,7 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
         else{
           missingCommaFlag=false;
         }
+        i++;
       }
       else{
         /*not a comma*/
@@ -157,9 +154,8 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
         else{
           missingCommaFlag=true;
         }
+        ignoreChars(&i, commandLine);
       }
-      ++i;
-      ignoreChars(&i, commandLine);
       ignoreWhiteSpaces(&i, commandLine);
     } /*end of while*/
     if(!missingCommaFlag){
@@ -180,7 +176,6 @@ void setExternal(char *str, int fileLineNumber, bool *errorFlag)
   /*char *type=(str+1); will looks like .entry ot .external*/
   if (!(token = strtok(NULL, " \t\n")))
   {
-    addError("This directive must have a label parameter", fileLineNumber, NULL);
     printf("\tERROR: This directive must get a label as a parameter (line %d).\n", fileLineNumber);
     *errorFlag=true;
     return;
@@ -202,14 +197,13 @@ void setExternal(char *str, int fileLineNumber, bool *errorFlag)
       }
     }
     else{
-      /**/
+      /*this label is illegal - the specific error was printed during the 'isLegalLabel' function run*/
       *errorFlag=true;
     }
   }
   if ((token = strtok(NULL, " \t\n")))
   {
-    addError("This directive can only have only one parameter", fileLineNumber, NULL);
-    printf("\tERROR: This directive can only get one label as a parameter (line %d).\n", fileLineNumber);
+    printf("\tERROR: This directive can get only one label as a parameter (line %d).\n", fileLineNumber);
     *errorFlag=true;
   }
 }

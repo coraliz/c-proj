@@ -3,13 +3,6 @@
 
 #include "header.h"
 
-struct cMachineCode
-{
-  unsigned int destination: 2;
-  unsigned int source: 2;
-  unsigned int funct:4;
-  unsigned int opcode:4;
-};
 
 /*definition of first word type*/
 typedef struct commandWords
@@ -18,14 +11,7 @@ typedef struct commandWords
   char era;
   int decimalAddress;
   unsigned short int mc;
-  struct cMachineCode machineCode;
 } commandWord;
-
-typedef union oMachineCodes
-{
-  unsigned int address: 12;
-  int relativeAddress: 12;
-} oMachineCode;
 
 
 typedef struct operandWords
@@ -38,7 +24,6 @@ typedef struct operandWords
   int hasMachineCode;
   int fileLineNumber;
   unsigned short int mc;
-  oMachineCode machineCode;
 } operandWord;
 
 /*change this name to wordNodes*/

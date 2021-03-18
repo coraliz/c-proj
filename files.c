@@ -10,7 +10,7 @@ FILE * openFile(char* filename, char * mode, char *extension)
   /*Temp file to be returned*/
   FILE *tmp = NULL;
   /*Full filename string*/
-  char full_filename[MAX_FILENAME];
+  char full_filename[MAX_FILENAME_LENGTH];
   /*Copy the filename from argv to the full filename string*/
   strcpy(full_filename, filename);
   /*Add the .as extension to the full filename.*/
@@ -43,7 +43,7 @@ void exportFiles(int IC, int DC, char * name)
   /*open an object file in write mode*/
   object = openFile(name, "w", OB_EXTENSION);
   wordList = getWordsHead();
-  printf("\n\t##################EXPORT FILES##################\n");
+  printf("\n\t##################EXPORT FILES##################");
   fprintf(object, "%d %d\n", (IC-INTITIAL_IC_VALUE), DC);
   printf("\t###the values of IC and DC are: %d %d\n", (IC-INTITIAL_IC_VALUE), DC);
   /*WORDS*/
@@ -55,16 +55,16 @@ void exportFiles(int IC, int DC, char * name)
    printf("\t###command name: %s\n", wordList->commandWord.name);
    printf("\t###command era: %c\n", wordList->commandWord.era);
    printf("\t###command is:\n");
-   printf("\t%04d %03X %c\n", wordList->commandWord.decimalAddress, wordList->commandWord.mc, wordList->commandWord.era);
+   printf("\t%04d %03X %c\n", wordList->commandWord.decimalAddress, (wordList->commandWord.mc & 0xFFF), wordList->commandWord.era);
    /**/
-   fprintf(object, "%04d %03X %c\n", wordList->commandWord.decimalAddress, wordList->commandWord.mc, wordList->commandWord.era);
+   fprintf(object, "%04d %03X %c\n", wordList->commandWord.decimalAddress, (wordList->commandWord.mc & 0xFFF), wordList->commandWord.era);
    /*checks if source operand exists - if so, we print it data*/
    if(wordList->sourceOperandWord.decimalAddress){
      /**/
      printf("\t###source is:\n");
-     printf("\t%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, wordList->sourceOperandWord.mc, wordList->sourceOperandWord.era);
+     printf("\t%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, (wordList->sourceOperandWord.mc & 0xFFF), wordList->sourceOperandWord.era);
      /**/
-     fprintf(object, "%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, wordList->sourceOperandWord.mc, wordList->sourceOperandWord.era);
+     fprintf(object, "%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, (wordList->sourceOperandWord.mc & 0xFFF), wordList->sourceOperandWord.era);
      /*if there is a value defined as extern we would like to print all the addresses in which it appears*/
      if((!externFlag)&&(wordList->sourceOperandWord.isExternal)){
        externFlag=true;
@@ -75,9 +75,9 @@ void exportFiles(int IC, int DC, char * name)
    if(wordList->destinationOperandWord.decimalAddress){
      /**/
      printf("\t###dest is:\n");
-     printf("\t%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, wordList->destinationOperandWord.mc, wordList->destinationOperandWord.era);
+     printf("\t%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, (wordList->destinationOperandWord.mc & 0xFFF), wordList->destinationOperandWord.era);
      /**/
-     fprintf(object, "%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, wordList->destinationOperandWord.mc, wordList->destinationOperandWord.era);
+     fprintf(object, "%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, (wordList->destinationOperandWord.mc & 0xFFF), wordList->destinationOperandWord.era);
      if((!externFlag)&&(wordList->destinationOperandWord.isExternal)){
        externFlag=true;
      }
@@ -93,8 +93,8 @@ void exportFiles(int IC, int DC, char * name)
   printf("\t###starts the data\n");
   while (dataList)
   {
-    fprintf(object, "%04d %03X %c\n", dataList->address, dataList->machineCode, dataList->era);
-    printf("\t%04d %03X %c\n", dataList->address, dataList->machineCode, dataList->era);
+    fprintf(object, "%04d %03X %c\n", dataList->address, (dataList->machineCode & 0xFFF), dataList->era);
+    printf("\t%04d %03X %c\n", dataList->address, (dataList->machineCode & 0xFFF), dataList->era);
     dataList = dataList->next;
   }
 

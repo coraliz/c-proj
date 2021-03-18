@@ -7,6 +7,12 @@
 #include "utilsFirstPass.h"
 
 
+/*defines*/
+#define REGISTER_STR_LENGTH 2
+#define REGISTERS_COUNT 8
+#define OPCODES_COUNT 16
+
+
 /*structures*/
 typedef struct instructions
 {

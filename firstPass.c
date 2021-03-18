@@ -2,6 +2,7 @@
 
 /*This file contains the first pass function*/
 
+
 bool firstPass(FILE *fp, int *IC, int *DC)
 {
   char commandLine[MAX_LINE_LENGTH];
@@ -11,19 +12,12 @@ bool firstPass(FILE *fp, int *IC, int *DC)
   /*rotate the lines of the file given as input to translate each of its lines into system commands*/
   while (fgets(commandLine, MAX_LINE_LENGTH, fp)) /*current line in the file*/
   {
+    /*if (strrchr(buf, '\n') == NULL) {*/
     char *token = NULL;
-    char *label = NULL;
+    char *label=NULL;
     fileLineNumber++;
 
     printf("\n\t##########################FIRST PASS##########################\n");
-    
-    /*
-    printf("\t###line length is: *%ld*\n", strlen(commandLine));
-    if(strlen(commandLine)==MAX_LINE_LENGTH){
-      printf("ERROR: This line is too long (line %d)",fileLineNumber);
-      continue;
-    }
-    */
     
     strtok(commandLine, "\r\n"); /*removing trailing newline character from fgets() input*/
     printf("\t###commandLine IS: *%s* \n", commandLine);
@@ -46,13 +40,12 @@ bool firstPass(FILE *fp, int *IC, int *DC)
       token[strlen(token) - 1] = 0; /*':' is setted to null terminator*/
       if (isLegalLabel(token, fileLineNumber))
       {
-        label = token;
+        label=token;
         printf("\t###saved label name (first pass): %s\n", label);
         token = strtok(NULL, " \t");
         printf("\t###TOKEN AFTER LABEL IS: *%s*\n", token);
         if (!token)
         {
-          addError("Must add something next to label", fileLineNumber, NULL);
           printf("ERROR: required to write some command after setting the label \'%s\' (line %d)", label, fileLineNumber);
           errorFlag=true;
           continue;
@@ -72,44 +65,35 @@ bool firstPass(FILE *fp, int *IC, int *DC)
       /*.data*/
       if (!strcmp(token, DATA_DIRECTIVE_STR))
       {
+        char *nums = strtok(NULL, "\0");
         if (label)
         {
           addSymbol(label, *DC, false, true, false, false, fileLineNumber, &errorFlag);
         }
-        addNumbers(fileLineNumber, DC, &errorFlag);
+        addNumbers(nums, fileLineNumber, DC, &errorFlag);
       }
       /*.string*/
       else if (!strcmp(token, STRING_DIRECTIVE_STR))
       {
+        char *string = strtok(NULL, "\0");
         if (label)
         {
           addSymbol(label, *DC, false, true, false, false, fileLineNumber, &errorFlag);
         }
-        addString(fileLineNumber, DC, &errorFlag);
+        addString(string, fileLineNumber, DC, &errorFlag);
       }
-      /*.entry*/
-      else if (!strcmp(token, ENTRY_DIRECTIVE_STR))
+      /*'.entry' or '.extern'*/
+      else if ((!strcmp(token, ENTRY_DIRECTIVE_STR))||(!strcmp(token, EXTERN_DIRECTIVE_STR)))
       {
         if (label)
         {
-          printf("\tWARNING: the label %s before entry directive is meaningless (line %d).\n", label, fileLineNumber); 
+          printf("\tWARNING: the label %s before \'%s\' directive is meaningless (line %d).\n", label, token, fileLineNumber); 
         }
         setExternal(token, fileLineNumber, &errorFlag);
       }
-      /*.extern*/
-      else if (!strcmp(token, EXTERN_DIRECTIVE_STR))
-      {
-        if (label)
-        {
-          printf("Warning, line %d: label \"%s\" before external directive is meaningless\n", fileLineNumber, label);
-        }
-        setExternal(token, fileLineNumber, &errorFlag);
-      }
-      /*undefined directive*/
       else
       {
         /*has directive convention but unrecognized*/
-        addError("Invalid directive", fileLineNumber, token);
         printf("\tERROR: \'%s\' is an invalid directive (line %d).\n", token, fileLineNumber);
         errorFlag=true;
       }
@@ -127,7 +111,6 @@ bool firstPass(FILE *fp, int *IC, int *DC)
   if (fileLineNumber == 0)
   {
     printf("\tERROR: This file is empty.\n");
-    addError("ERROR: File is empty.", -1, NULL);
   }
   return (!errorFlag);
 }

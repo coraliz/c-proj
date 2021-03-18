@@ -87,7 +87,6 @@ bool doesSymbolExist(char *label, int line)
   {
     if (!strcmp(ptr->label, label))
     {
-      addError("Multiple symbols with the same name", line, label);
       printf("\tERROR: There are multiple symbols with the name: %s (line %d).\n", label, line);
       return true;
     }

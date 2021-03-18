@@ -1,7 +1,5 @@
 #include "operations.h"
 
-#define REGISTER_STR_LENGTH 2
-
 static instruction instructions[16] = {
     /*opcodeName, opcode, funct, operandsCount*/
     {"mov", 0, 0, 2},
@@ -46,7 +44,7 @@ bool isRegister(char *token)
   int i;
   if (strlen(token) == REGISTER_STR_LENGTH && token[0] == 'r' && isdigit((int)(token[1])))
   {
-    for (i = 0; i < NUM_OF_REGISTERS; i++)
+    for (i = 0; i < REGISTERS_COUNT; i++)
     {
       if (!strcmp(token, registers[i]))
       {
@@ -70,19 +68,18 @@ bool isOperation(char *token)
   return false;
 }
 
-
 bool isDirective(char *token)
 {
-  char str[MAX_LABEL_LENGTH]=".";
+  char str[MAX_LABEL_LENGTH] = ".";
   strncat(str, token, MAX_LABEL_LENGTH);
   printf("\t###strncat is: %s", str);
-  if((!strcmp(str, DATA_DIRECTIVE_STR))||(!strcmp(str, STRING_DIRECTIVE_STR))||\
-  (!strcmp(str, ENTRY_DIRECTIVE_STR))||(!strcmp(str, EXTERN_DIRECTIVE_STR))){
+  if ((!strcmp(str, DATA_DIRECTIVE_STR)) || (!strcmp(str, STRING_DIRECTIVE_STR)) ||
+      (!strcmp(str, ENTRY_DIRECTIVE_STR)) || (!strcmp(str, EXTERN_DIRECTIVE_STR)))
+  {
     return true;
   }
   return false;
 }
-
 
 bool isLegalImmediateAddress(char *token, int fileLineNumber, int *num)
 {
@@ -93,20 +90,20 @@ bool isLegalImmediateAddress(char *token, int fileLineNumber, int *num)
   printf("\t###start the assert legal immediate address\n");
   *num = strtol(ptr, &errorptr, 10);
 
+  /*TODO: checksyntex*/
   if (*errorptr != 0)
   {
-    addError("Invalid number", fileLineNumber, NULL);
     printf("\tERROR: \'%s\' is an invalid number (line %d).\n", ptr, fileLineNumber);
     return false;
   }
   printf("\t###num is not the problem\n");
-  /*if the number isn't within range*/
-  if (*num > MAX_NUM_IMMEDIATE || *num < MIN_NUMBER_IMMEDIATE)
+
+  if (*num > MAX_NUMBER_VALUE || *num < MIN_NUMBER_VALUE)
   {
-    addError("Immediate number is out of range", fileLineNumber, NULL);
     printf("\tERROR: The immediate number \'%d\' is out of range (line %d).\n", *num, fileLineNumber);
     return false;
   }
+
   printf("\t###finished assert legal immediate address- returns true\n");
   return true;
 }
@@ -140,9 +137,8 @@ bool setImmediateOperandWord(wordNode *wordNodePtr, char *token, int fileLineNum
   {
     /*only these instructions can get an Immediate address: ("mov", "cmp", "add", "sub", "prn")*/
     /*check if can get first operand as immediate*/
-    if (strcmp(OPCODE_MOV, instructionName) && strcmp(OPCODE_CMP, instructionName) && strcmp(OPCODE_ADD, instructionName) && strcmp(OPCODE_SUB, instructionName) && strcmp(OPCODE_PRN, instructionName))
+    if (strcmp(MOV_STR, instructionName) && strcmp(CMP_STR, instructionName) && strcmp(ADD_STR, instructionName) && strcmp(SUB_STR, instructionName) && strcmp(PRN_STR, instructionName))
     {
-      addError("This command can't take an immediate number as a first operand", fileLineNumber, NULL);
       printf("\tERROR: \'%s\' command can't take an immediate number as a source operand (line %d).\n", instructionName, fileLineNumber);
       return false;
     }
@@ -153,10 +149,9 @@ bool setImmediateOperandWord(wordNode *wordNodePtr, char *token, int fileLineNum
   else
   {
     printf("this is dest in immediate\n");
-    if (strcmp(OPCODE_CMP, instructionName) && strcmp(OPCODE_PRN, instructionName))
+    if (strcmp(CMP_STR, instructionName) && strcmp(PRN_STR, instructionName))
     {
-      /*if(strcmp(OPCODE_CMP, instructionName)){*/
-      addError("This command can't take an immediate number as a second operand", fileLineNumber, NULL);
+      /*if(strcmp(CMP_STR, instructionName)){*/
       printf("\tERROR: \'%s\' command can't take an immediate number as a destination operand (line %d).\n", instructionName, fileLineNumber);
       return false;
     }
@@ -165,7 +160,8 @@ bool setImmediateOperandWord(wordNode *wordNodePtr, char *token, int fileLineNum
   }
   if (isLegalImmediateAddress(token, fileLineNumber, &immediateAddress))
   {
-    currentOperandWord->mc = (unsigned short int)(immediateAddress & 0xFFF);
+    /*currentOperandWord->mc = (unsigned short int)(immediateAddress & 0xFFF);*/
+    currentOperandWord->mc = ((unsigned short int)immediateAddress);
     currentOperandWord->era = ABSOLUTE;
     currentOperandWord->labelName = NULL;
     currentOperandWord->isExternal = false;
@@ -190,20 +186,20 @@ bool setRegisterOperandWord(wordNode *wordNodePtr, char *token, int fileLineNumb
   printf("\n\t###start register(enternal)\n");
   if (isSourceOperand)
   {
-    if (!strcmp(OPCODE_LEA, instructionName))
+    if (!strcmp(LEA_STR, instructionName))
     {
       printf("\tERROR: \'%s\' command can't take a register as a source operand (line %d).\n", instructionName, fileLineNumber);
       return false;
     }
-    wordNodePtr->commandWord.mc |= REGISTER << 2; /*source*/
     currentOperandWord = &(wordNodePtr->sourceOperandWord);
+    wordNodePtr->commandWord.mc |= REGISTER << 2; /*source*/
   }
   /*it's a second operand*/
   else
   {
     /*if(isInList(instructionName, sourceOperandCanGetRelativeAddressList, NUM_OF_RELAVITVE_OPERANDS)){*/
     /*only these instructions can't get an Immediate address as destination operand : ("jmp", "bne", "jsr")*/
-    if ((!strcmp(OPCODE_JMP, instructionName)) || (!strcmp(OPCODE_BNE, instructionName)) || (!strcmp(OPCODE_JSR, instructionName)))
+    if ((!strcmp(JMP_STR, instructionName)) || (!strcmp(BNE_STR, instructionName)) || (!strcmp(JSR_STR, instructionName)))
     {
       printf("\tERROR: \'%s\' command can't take a register as a destination operand (line %d).\n", instructionName, fileLineNumber);
       return false;
@@ -213,7 +209,7 @@ bool setRegisterOperandWord(wordNode *wordNodePtr, char *token, int fileLineNumb
   }
   /*do for both cases*/
   registerNum = (token[1] - '0');
-  currentOperandWord->mc = (unsigned short int)pow(2, registerNum);
+  currentOperandWord->mc = ((unsigned short int)pow(2, registerNum));
   currentOperandWord->era = ABSOLUTE;
   currentOperandWord->labelName = NULL;
   currentOperandWord->isExternal = false;
@@ -221,7 +217,6 @@ bool setRegisterOperandWord(wordNode *wordNodePtr, char *token, int fileLineNumb
   currentOperandWord->hasMachineCode = true;
   currentOperandWord->decimalAddress = *IC;
   currentOperandWord->fileLineNumber = fileLineNumber;
-  printf("\t###finished register(enternal)\n");
   return true;
 }
 
@@ -231,18 +226,18 @@ bool setRelativeOperand(wordNode *wordNodePtr, char *token, int fileLineNumber, 
   char *instructionName = wordNodePtr->commandWord.name;
   char *label = token + 1; /*take off the '#' char*/
   /*only these instructions can get a relative address as destination operand:("jmp", "bne", "jsr")*/
-  if ((!strcmp(OPCODE_JMP, instructionName)) || (!strcmp(OPCODE_BNE, instructionName)) || (!strcmp(OPCODE_JSR, instructionName)))
+  if ((!strcmp(JMP_STR, instructionName)) || (!strcmp(BNE_STR, instructionName)) || (!strcmp(JSR_STR, instructionName)))
   {
     if (setLabelOperand(wordNodePtr, label, fileLineNumber, false, IC))
     {
       wordNodePtr->destinationOperandWord.era = ABSOLUTE;
       wordNodePtr->destinationOperandWord.isRelative = true;
       wordNodePtr->destinationOperandWord.isExternal = false;
-      wordNodePtr->commandWord.mc++;
-      /* wordNodePtr->commandWord.mc|=RELATIVE; /destination*/
+      wordNodePtr->commandWord.mc++; /*TODO: explain*/
       return true;
     }
-    else{
+    else
+    {
       /*the specific error was printed during the 'setLabelOperand' function run*/
       return false;
     }
@@ -251,7 +246,6 @@ bool setRelativeOperand(wordNode *wordNodePtr, char *token, int fileLineNumber, 
   printf("\tERROR: \'%s\' gets the relative operand \'%s\' which is not is not allowed for this command (line %d).\n", instructionName, label, fileLineNumber);
   return false; /*label is ilegal*/
 }
-
 
 bool setLabelOperand(wordNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC)
 {
@@ -288,8 +282,6 @@ bool setLabelOperand(wordNode *wordNodePtr, char *token, int fileLineNumber, int
     return false;
   }
 }
-
-/**********************************FINISH TO COPY**********************************/
 
 int getTokenType(char *token)
 {
@@ -366,9 +358,10 @@ void setOperandWord(bool *errorFlag, wordNode *wordNodePtr, char *token, int fil
 } /*end of func*/
 
 /*********************************NEW********************************/
-void stopAnalyzer(wordNode *wordPtr, bool *errorsFlag){
+void stopAnalyzer(wordNode *wordPtr, bool *errorsFlag)
+{
   freeWord(wordPtr);
-  *errorsFlag=true;
+  *errorsFlag = true;
 }
 
 void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, bool *errorFlag)
@@ -379,10 +372,9 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
   char *params, *sourceOperandStr, *destinationOperandStr, *extraOperandStr;
   wordNode *wordNodePtr = (wordNode *)calloc(1, sizeof(wordNode));
 
-
   printf("\n\t#########start to analyzing with the instruction: %s \n", token);
   checkAllocation(wordNodePtr);
-  
+
   for (i = 0; i < OPCODES_COUNT; i++)
   {
     if (!strcmp(token, instructions[i].name))
@@ -393,7 +385,6 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
   }
   if (!isCommandFound)
   {
-    addError("Unknown command", fileLineNumber, token);
     printf("\tERROR: \'%s\' is an unknown command (line %d).\n", token, fileLineNumber);
     stopAnalyzer(wordNodePtr, errorFlag);
     return;
@@ -430,7 +421,6 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
 
     if (extraOperandStr)
     {
-      addError("This command has too many parameters", fileLineNumber, NULL);
       printf("\tERROR: This command has more than two parameters (line %d).\n", fileLineNumber);
       stopAnalyzer(wordNodePtr, errorFlag);
       return;
@@ -446,8 +436,7 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
       }
       else
       {
-        addError("This command has less than two parameters (line %d).\n", fileLineNumber, NULL);
-        printf("\tERROR: This command has less than two parameters (line %d).\n", fileLineNumber);
+        printf("\tERROR: The command \'%s\' command has less than two parameters (line %d).\n", wordNodePtr->commandWord.name, fileLineNumber);
         stopAnalyzer(wordNodePtr, errorFlag);
         return;
         /*errorFlag = true;
@@ -470,8 +459,7 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
 
     if (extraOperandStr)
     {
-      addError("This command has too many parameters", fileLineNumber, NULL);
-      printf("\tERROR: This command has more than one parameter (line %d).\n", fileLineNumber);
+      printf("\tERROR: The command \'%s\' has more than one parameter (line %d).\n", wordNodePtr->commandWord.name, fileLineNumber);
       stopAnalyzer(wordNodePtr, errorFlag);
       return;
       /*errorFlag = true;
@@ -485,8 +473,7 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
       }
       else
       {
-        addError("This command must get an operand", fileLineNumber, NULL);
-        printf("\tERROR: This command did not receive a parameter (line %d).\n", fileLineNumber);
+        printf("\tERROR: The command \'%s\' did not receive a parameter (line %d).\n", wordNodePtr->commandWord.name, fileLineNumber);
         stopAnalyzer(wordNodePtr, errorFlag);
         return;
         /*errorFlag = true;
@@ -500,8 +487,7 @@ void analyzeOperation(char *token, int fileLineNumber, int *IC, char *label, boo
     extraOperandStr = strtok(NULL, " ,\t\0");
     if (extraOperandStr)
     {
-      addError("This command doesn't have parameters", fileLineNumber, NULL);
-      printf("\tERROR: This command should not have parameters (line %d).\n", fileLineNumber);
+      printf("\tERROR: The command \'%s\' should not have parameters (line %d).\n", wordNodePtr->commandWord.name, fileLineNumber);
       stopAnalyzer(wordNodePtr, errorFlag);
       return;
     }
