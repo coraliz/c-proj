@@ -1,6 +1,4 @@
-#include "header.h"
-
-
+#include "files.h"
 /*This file contains function used for file handling*/
 
 /*openInputFile function - used to open files.
@@ -45,7 +43,7 @@ void exportFiles(int IC, int DC, char * name)
   /*open an object file in write mode*/
   object = openFile(name, "w", OB_EXTENSION);
   wordList = getWordsHead();
-  printf("\t###################################");
+  printf("\n\t##################EXPORT FILES##################\n");
   fprintf(object, "%d %d\n", (IC-INTITIAL_IC_VALUE), DC);
   printf("\t###the values of IC and DC are: %d %d\n", (IC-INTITIAL_IC_VALUE), DC);
   /*WORDS*/
@@ -57,17 +55,16 @@ void exportFiles(int IC, int DC, char * name)
    printf("\t###command name: %s\n", wordList->commandWord.name);
    printf("\t###command era: %c\n", wordList->commandWord.era);
    printf("\t###command is:\n");
-   printf("%04d %03X %c\n", wordList->commandWord.decimalAddress, wordList->commandWord.mc, wordList->commandWord.era);
+   printf("\t%04d %03X %c\n", wordList->commandWord.decimalAddress, wordList->commandWord.mc, wordList->commandWord.era);
    /**/
    fprintf(object, "%04d %03X %c\n", wordList->commandWord.decimalAddress, wordList->commandWord.mc, wordList->commandWord.era);
    /*checks if source operand exists - if so, we print it data*/
    if(wordList->sourceOperandWord.decimalAddress){
      /**/
      printf("\t###source is:\n");
-     printf("%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, wordList->sourceOperandWord.mc, wordList->sourceOperandWord.era);
+     printf("\t%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, wordList->sourceOperandWord.mc, wordList->sourceOperandWord.era);
      /**/
      fprintf(object, "%04d %03X %c\n", wordList->sourceOperandWord.decimalAddress, wordList->sourceOperandWord.mc, wordList->sourceOperandWord.era);
-     printf("\n\t###end of source\n");
      /*if there is a value defined as extern we would like to print all the addresses in which it appears*/
      if((!externFlag)&&(wordList->sourceOperandWord.isExternal)){
        externFlag=true;
@@ -78,7 +75,7 @@ void exportFiles(int IC, int DC, char * name)
    if(wordList->destinationOperandWord.decimalAddress){
      /**/
      printf("\t###dest is:\n");
-     printf("%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, wordList->destinationOperandWord.mc, wordList->destinationOperandWord.era);
+     printf("\t%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, wordList->destinationOperandWord.mc, wordList->destinationOperandWord.era);
      /**/
      fprintf(object, "%04d %03X %c\n", wordList->destinationOperandWord.decimalAddress, wordList->destinationOperandWord.mc, wordList->destinationOperandWord.era);
      if((!externFlag)&&(wordList->destinationOperandWord.isExternal)){
@@ -97,7 +94,7 @@ void exportFiles(int IC, int DC, char * name)
   while (dataList)
   {
     fprintf(object, "%04d %03X %c\n", dataList->address, dataList->machineCode, dataList->era);
-    printf("%04d %03X %c\n", dataList->address, dataList->machineCode, dataList->era);
+    printf("\t%04d %03X %c\n", dataList->address, dataList->machineCode, dataList->era);
     dataList = dataList->next;
   }
 
@@ -134,7 +131,7 @@ void exportFiles(int IC, int DC, char * name)
     }
   }
 
-  printf("Success! files exported.\n");
+  printf("\n\t~~~~~~~~~~~~~Success! files exported.~~~~~~~~~~~~~\n");
   /*close all files*/
   if(object)
     fclose(object);

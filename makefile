@@ -10,4 +10,4 @@ maman14: main.o files.o firstPass.o secondPass.o errorHandler.o symbolsList.o ut
 	gcc -c -g -Wall -ansi -pedantic $^ -o $@
 
 clean:
-	rm -rf *.o *.exe
+	rm -rf *.o *.exe *.ent *.ext *.ob

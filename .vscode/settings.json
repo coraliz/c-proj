@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "header.h": "c",
+        "datalist.h": "c",
+        "firstpass.h": "c",
+        "files.h": "c",
+        "symbolslist.h": "c",
+        "secondpass.h": "c",
+        "operations.h": "c",
+        "wordslist.h": "c",
+        "utilsfirstpass.h": "c",
+        "entrylist.h": "c"
+    }
+}

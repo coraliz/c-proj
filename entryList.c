@@ -1,4 +1,5 @@
-#include "header.h"
+/*#include "header.h"*/
+#include "entryList.h"
 
 static entry *entryHead = NULL;
 
@@ -34,8 +35,9 @@ void addEntry(char *label, int line)
       p = p->next;
     p->next = newEntry;
   }
-  printf("\n\t###added the entry: %s\n", newEntry->label);
+  printf("\t###added the entry: %s\n", newEntry->label);
 }
+
 
 /*This function checks if an entry with the same label already exists
 If there is one, it will return 0. else, it will return 1;*/
@@ -70,7 +72,7 @@ void freeEntries()
     free(tmp);
   }
   entryHead = NULL;
-  printf("entries are free\n");
+  printf("\n\t###entries are free\n");
 }
 
 
@@ -84,15 +86,15 @@ entry * getUndefinedEntry()
   printf("\n\t###in getUndefinedEntry\n");
   while (ptr)
   {
-    printf("\n\t###generic is: %s\n", ptr->label);
+    printf("\t###generic is: %s\n", ptr->label);
     if (ptr->checked==false)
     {
-      printf("\n\t###undefinedEntry is: %s\n", ptr->label);
+      printf("\t###undefinedEntry is: %s\n", ptr->label);
       return ptr;
     }
     ptr = ptr->next;
   }
-  printf("\n\t###out getUndefinedEntry\n");
+  printf("\t###out getUndefinedEntry\n");
   return NULL;
 }
 

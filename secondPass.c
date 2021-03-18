@@ -1,43 +1,51 @@
-#include "header.h"
+#include "secondPass.h"
 /*This file contains the second pass function*/
 
-void secondPass(int IC, int DC)
+bool secondPass(int IC, int DC)
 {
   operandWord *searchedLabelWord = NULL;
   symbol *tmpSymbol = NULL;
-  entry *entryLabel=NULL;
+  entry *entryLabel = NULL;
+  bool errorFlag;
 
-  printf("\t##start second pass\n");
+  printf("\n\t###start second pass\n");
   /*If the overall count of words and data exceeds the memory limit, add error and quit*/
   if (((IC-100) + DC) > 4096 )
   {
     addError("Exceeded memory limit", -1, NULL);
-    printf("\t##Exceeded memory limit\n");
-    return;
+    printf("\tERROR: This file exceeded the memory limit.\n"); /*TODO: try to add the name file*/
+    return false; /*stop second pass runing*/
   }
-  /*LABELS*/
-  /*Loop that gets every label which is missing an address*/
+  /*LABELS ADDRESSES COMPLETE*/
+  /*scan all the existing instructions in the code and search for the words that are labels 
+  and therefore missing a machine code (after the first scan)*/
   while ((searchedLabelWord = getLabelWord()))
   {
     printf("\t###works on the label: %s\n", searchedLabelWord->labelName);
     /*search for labels in the list of symbols*/
     tmpSymbol = searchSymbol(searchedLabelWord->labelName);
-    /*If no such symbol was fo0und, add an error*/
+    /*If no such symbol was found, add an error*/
     if(!tmpSymbol)
     {
+      /*in this case we did not find the labels in the symbol table, 
+      meaning it was not defined in our assembly code*/
+      /*TODO: TAKE IT OFF*/
       char *tmpString;
       tmpString = malloc(sizeof(char)*MAX_LINE_LENGTH);
       strcpy(tmpString, "Label \"");
       strcat(tmpString, searchedLabelWord->labelName);
       strcat(tmpString, "\" was not declared");
       addError(tmpString, searchedLabelWord->fileLineNumber, NULL);
-      printf("\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^Regular label Wasn't declared : %s\n", searchedLabelWord->labelName);
+      /*END OF OFF*/
+
+      errorFlag=true;
+      printf("\tERROR: The label \'%s\' is not defined (line %d).\n", searchedLabelWord->labelName, searchedLabelWord->fileLineNumber);
     }
-    /*SYMBOL WAS FOUND*/
-    /*change the details of the operand word depending on the type of symbol*/
+    /**SYMBOL WAS FOUND**/
+    /*we found the label in the table of symbols and now we will define the appropriate values for it*/
     else if(tmpSymbol->isExternal)
     {
-      /*EXTERN OPERAND*/
+      /*EXTERN LABEL*/
       printf("\t###got to external label case\n");
       searchedLabelWord->era = EXTERNAL;
       searchedLabelWord->mc = ((unsigned short int)EXTERNAL_SYMBOL_ADDRESS);
@@ -45,60 +53,81 @@ void secondPass(int IC, int DC)
     }
     else if(searchedLabelWord->isRelative)
     {
-      /*RELATIVE OPERAND*/
+      /*RELATIVE LABEL*/
       printf("\t###got to relative label case\n");
-      /*use 0xFFF to reset first 4 bit of the address*/
-      searchedLabelWord->mc = ((((tmpSymbol->address)-(searchedLabelWord->decimalAddress)))&(0xFFF)); 
-    }  
-    /*otherwise it is an entry label*/
+      if(!(tmpSymbol->isCode)){
+        addError("Only symbol from type 'code' can be assigned as a relative address", searchedLabelWord->fileLineNumber, NULL);
+        errorFlag=true;
+        printf("\tERROR: The label \'%s\' is not an instruction (line %d).\n", searchedLabelWord->labelName, searchedLabelWord->fileLineNumber);
+        /*TODO: make sure the indication is good*/
+      }
+      else{
+        /*use 0xFFF to reset first 4 bit of the address*/
+        searchedLabelWord->mc = ((((tmpSymbol->address)-(searchedLabelWord->decimalAddress)))&(0xFFF)); 
+      }
+    }
     else{
-      /*CODE OPERAND (regular label)*/
-      printf("\tgot to entry label case\n");
+      /*this is a code label*/
+      printf("\t###got to code label case\n");
       searchedLabelWord->mc = ((tmpSymbol->address)&0xFFF);
     }
-    /*continue to the next operand that has no address*/
     searchedLabelWord->hasMachineCode = true;
-  }
+    /*continue to the next word in list that has no address*/
+  } /*end of while (labels that are missing address)*/
+
   /*ENTRY*/
-  /*check if all objects declared as entry in the code are indeed defined*/
+  /* look for all the labels defined as entry and make sure they are defined in the code */
   while ((entryLabel = getUndefinedEntry()))
   {
-    printf("\t###works on the entry: %s\n", entryLabel->label);
+    printf("\n\t###works on the entry: %s\n", entryLabel->label);
     /*Search for symbols with the same name*/
     tmpSymbol = searchSymbol(entryLabel->label);
-    /*If there is no such symbol, add an error*/
+    printf("\t###continue");
+    printf("\t###continue");
+    printf("\t###continue");
     if(!tmpSymbol)
     {
-      /*if the symbol is not in the symbols list, then it is not defined*/
-      /*add an error for that*/
+      /*in this case we did not find the entry in the symbol table, 
+      meaning it was not defined in our assembly code*/
+
+      /*TODO: TAKE IT OFF*/
       char *tmpString;
       tmpString = malloc(sizeof(char)*MAX_LINE_LENGTH);
       strcpy(tmpString, "Label \"");
       strcat(tmpString, entryLabel->label);
       strcat(tmpString, "\" was not defined");
       addError(tmpString, entryLabel->line, NULL);
-      printf("\n\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^Entry label Wasn't declared : %s\n", searchedLabelWord->labelName);
+      /*END OF OFF*/
+      errorFlag=true;
+      printf("\tERROR: The entry \'%s\' is not defined (line %d).\n", entryLabel->label, entryLabel->line);
     }
     /*the enry was found in the symbols list*/
     else
     {
+      printf("\t###the entry %s was found in symbols list", entryLabel->label);
       if(tmpSymbol->isExternal){
+        /*if this condition is true this label has also been declared as extern*/
+        /*TODO: OFF*/
         char *tmpString;
         tmpString = malloc(sizeof(char)*MAX_LINE_LENGTH);
         strcpy(tmpString, "Label \"");
         strcat(tmpString, entryLabel->label);
         strcat(tmpString, "\" be declared as entry and extern");
         addError(tmpString, entryLabel->line, NULL);
-        return;
+        /*END OFF*/
+        errorFlag=true;
+        printf("\tERROR: The entry \'%s\' cannot be defined as entry and extren at the same  (line %d).\n", entryLabel->label, entryLabel->line);
       }
       else{
         /*declare as entry only*/
-        printf("\t###change the entry label: %s to true", entryLabel->label);
+        printf("\t###change the entry label: %s to true\n", entryLabel->label);
         tmpSymbol->isEntry=true;
       }
     }
-    /*mark theis entry label as checked in the list*/
+    /*mark this entry label as checked in the list*/
     entryLabel->checked = true;
-  }
-  printf("finished second pass\n");
+  }/*end of while (entries check)*/
+
+  printf("\n\t###finished second pass\n");
+  return (!errorFlag);
 }

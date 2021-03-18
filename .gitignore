@@ -4,4 +4,6 @@ out
 *.ent
 *.exe
 *.ext
+*.stackdump
+*.as
 maman14

@@ -1,4 +1,4 @@
-#include "header.h"
+#include "wordsList.h"
 
 /*Pointer to head
 static wordNode * commandCodeHead = NULL;*/
@@ -46,20 +46,6 @@ void updateAddresses()
 } */
 
 /*This function returns the number of nodes in the list*/
-int countWords()
-{
-  int counter = 0;
-  wordNode *ptr = commandCodeHead;
-  if (!ptr){
-    return counter;
-  }
-  while (ptr)
-  {
-    counter++;
-    ptr = ptr->next;
-  }
-  return counter;
-}
 
 /*This function cleans up the list*/
 void freeWords()
@@ -75,24 +61,39 @@ void freeWords()
     ptr = ptr->next;
     if(tmp->sourceOperandWord.labelName){
       free(tmp->sourceOperandWord.labelName);
-      printf("\tfree tmp->sourceOperandWord.labelName\n");
+      printf("\t\t###free tmp->sourceOperandWord.labelName\n");
     }
     if(tmp->destinationOperandWord.labelName){
       free(tmp->destinationOperandWord.labelName);
-      printf("\tfree tmp->destinationOperandWord.labelName\n");
+      printf("\t\t###free tmp->destinationOperandWord.labelName\n");
     }
     free(tmp);
   }
   commandCodeHead = NULL;
-  printf("commandCodes is free\n");
+  printf("\t###commandCodes is free\n");
 }
+
+
+void freeWord(wordNode *wordPtr)
+{
+  if(wordPtr->sourceOperandWord.labelName){
+      free(wordPtr->sourceOperandWord.labelName);
+      printf("\t\t###free wordPtr->sourceOperandWord.labelName\n");
+    }
+    if(wordPtr->destinationOperandWord.labelName){
+      free(wordPtr->destinationOperandWord.labelName);
+      printf("\t\t###free wordPtr->destinationOperandWord.labelName\n");
+    }
+    free(wordPtr);
+}
+
 
 /*This function will search for a word with a missing label and return it.
 if no such word was found, it will return NULL*/
 operandWord *getLabelWord()
 {
   wordNode *p = commandCodeHead;
-  printf("\t##inside get label function\n");
+  printf("\t###inside get label function\n");
   while (p)
   {
     if((p->sourceOperandWord.labelName)&&(!(p->sourceOperandWord.hasMachineCode))){
@@ -103,7 +104,7 @@ operandWord *getLabelWord()
     }
     p=p->next;
   }
-  printf("\t##no more labels\n");
+  printf("\t###no more labels\n");
   return NULL;
 }
 

@@ -1,4 +1,4 @@
-/* #include "header.h"*/
+
 #include "dataList.h"
 /*This file contains functions which handle the data list*/
 
@@ -10,61 +10,80 @@ static data *dataHead = NULL;
 if the string recieved is null, it will add an error. otherwise, it will loop through the string's
 tokens and send each one to the addNumber function*/
 
-void splitNumbers(int line, int * DC)
+void addNumbers(int line, int *DC, bool *errorFlag)
 {
   char *nums;
   char *singleNum;
 
   nums = strtok(NULL, "\0");
-  printf("\n\t##The token is splitNumbers is: %s\n", nums);
+  printf("\n\t##The token is setNumbers are: *%s*\n", nums);
 
   if(!nums){
     /*add error and return*/
     addError("You must specify numbers", line, NULL);
-    printf("\tYou must specify numbers\n");
+    printf("\tERROR: you must define numbers that are separated by commas after the data directive (line %d).\n", line);
+    *errorFlag=true;
     return;
   }
   if(!isLegalCommadConvention(nums, line)){
-    printf("\tisn't legal commad convention\n");
+    /*a specific error was printed while running the above function*/
+    *errorFlag=true;
     return;
   }
-  singleNum=strtok(nums, ", \t\0");
+  singleNum=strtok(nums, ",");
   printf("\n\t##The singleNum is is: %s\n", singleNum);
   while(singleNum){
-    addNumber(singleNum, line, DC);
-    singleNum=strtok(NULL, " ,\t\0");
+    addNumber(singleNum, line, DC, errorFlag);
+    singleNum=strtok(NULL, ",");
   }
 }
 
 
-void addNumber(char *number, int line, int * DC)
+void addNumber(char *number, int line, int * DC, bool *errorFlag)
 {
   char *errorPtr = NULL;
   long int tmpNum;
 
-  printf("\n\t***check number: %s*\n", number);
+  printf("\n\t***check number: *%s*\n", number);
   /*convert the string to a number*/
   tmpNum = strtol(number, &errorPtr, 10);
-  printf("\n\t***1. add number: %ld\n", tmpNum);
 
   /*if strtok returned an error*/
-  if (*errorPtr != '\0')
+  printf("\terrorPtr: *%s*\n", errorPtr);
+  while(*errorPtr != '\0'){
+    if(isspace((int)*errorPtr)){
+      errorPtr++;
+    }
+    else{
+      addError("Invalid number", line, number);
+      printf("\tERROR: \'%s\' is an invalid number (line %d).\n", number, line);
+      *errorFlag=true;
+      return;
+    }
+  }
+  /*
+  if (!(isspace((int)*errorPtr))&&(*errorPtr != '\0'))
   {
-    /*add an error and exit function*/
+    //add an error and exit function
     addError("Invalid number", line, number);
-    printf("Invalid number\n");
+    printf("\tERROR: \'%s\' is an invalid number (line %d).\n", number, line);
+    *errorFlag=true;
     return;
   }
+  */
 
   /*if number is out of 15-bit range*/
+
+  /*TODO: take it off*/
   if ((tmpNum < MIN_NUMBER_DATA) || (tmpNum > MAX_NUMBER_DATA))
   {
     /*add error and exit function*/
     addError("Number is out of range", line, number);
-    printf("Number is out of range\n");
+    printf("Number is out of range %s \n", number);
+    *errorFlag=true;
     return;
   }
-  printf("\n\t***2. add number: %ld\n", tmpNum);
+  /*END*/
   addData(((unsigned short int)tmpNum), DC);
 }
 
@@ -73,7 +92,7 @@ void addData(unsigned short int value, int *DC){
   data *newData;
   newData = (data *)malloc(sizeof(data));
   checkAllocation(newData);
-  printf("\t###START TO SET DATA: %X###\n", value);
+  printf("\n\t###START TO SET DATA: %X###\n", value);
 
   newData->era=ABSOLUTE;
   newData->machineCode = (value & (0xFFF));
@@ -96,35 +115,33 @@ void addData(unsigned short int value, int *DC){
 
 
 /*This function adds a string to the data list*/
-void addString(int line, int *DC)
+void addString(int line, int *DC, bool *errorFlag)
 {
+  /*TODO: isprint? */
   char *string;
   string = strtok(NULL, "\0");
-  printf("\tThe string is: *%s*\n", string);
-  printf("\tFirst char is: *%c*\n", string[0]);
-  printf("\tLast char is: *%c*\n", string[strlen(string) - 1]);
+  printf("\n\tThe string is: *%s*\n", string);
 
-  if (!string)
+  if ((!string) || (!strcmp(string, "\"")))
   {
     addError("Must specify a string", line, NULL);
+    printf("\tERROR: You must define a string after a string directive surrounded by quotation marks (line %d).\n", line);
+    *errorFlag=true;
     return;
   }
-  if (!strcmp(string, "\""))
-  {
-    addError("Must specify a string", line, NULL); /*if we only recieved a "*/
-    return;
-  }
-
-  if ((string[0] == '"') && (string[strlen(string) - 1] == '"')) /*Check if string is surrounded by quotation marks*/
+  /*check if string is surrounded by quotation marks*/
+  if ((string[0] == '"') && (string[strlen(string) - 1] == '"'))
   {
     string[strlen(string) - 1] = '\0'; /*change right quotation marks to null terminator*/
     string++;
   }
-  /*if it's not surrounded by quotation marks*/
+  /*it's not surrounded by quotation marks*/
   else
   {
     /*add error and return*/
     addError("Strings must be surrounded by quotation marks", line, NULL);
+    printf("\tERROR: This string does not surrounded by quotation marks (line %d).\n", line);
+    *errorFlag =true;
     return;
   }
 
@@ -158,8 +175,10 @@ void updateDataAddresses(int IC)
     IC++;
     ptr = ptr->next;
   }
-  printf("finished to update data address");
+  printf("\n\t###finished to update data address");
 }
+
+
 /*Clear the data list*/
 void freeData()
 {
@@ -175,7 +194,7 @@ void freeData()
     free(prevPtr);
   }
   dataHead = NULL;
-  printf("data is free\n");
+  printf("\n\t###data is free\n");
 }
 
 /*return pointer to head. used when exporting files*/

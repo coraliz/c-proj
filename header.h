@@ -1,16 +1,3 @@
-#ifndef HEADER_H
-#define HEADER_H
-/* Includes */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <math.h>
-
-#include "structs.h"
-#include "defines.h"
-
 /*
 Maman 14 by Amit Fisher
 How it works:
@@ -32,15 +19,93 @@ How it works:
     if there aren't any errors, we will create an object file, and extern/entry files if needed.
 */
 
-/*files.c functions*/
-FILE * openFile(char* filename, char * mode, char * extension);
-void exportFiles(int IC, int DC, char * name);
 
-/*firstPass.c functions*/
-void firstPass(FILE * f, int * counter, int * DC);
+/*This file contains enumerations and defines of constants*/
 
-/*secondPass.c functions*/
-void secondPass(int IC, int DC);
+#ifndef HEADER_H
+#define HEADER_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <math.h>
+
+#include "structs.h"
+#include "defines.h"
+
+/*boolean enum*/
+/*enum boolean {false=0, true=1};*/
+typedef enum booleans {false=0, true=1} bool;
+
+/*Directive enum - used during the first pass to determine which directive has been recieved.*/
+typedef enum directiveTypes {NOT_A_DIRECTIVE, DATA_DIRECTIVE, STRING_DIRECTIVE, ENTRY_DIRECTIVE, EXTERN_DIRECTIVE, UNDEFINED_DIRECTIVE} directiveType;
+/*the values also represents the addresing method, ecept to label which is not a method*/
+enum operandTypes {NONE=-1, IMMEDIATE=0, DIRECT=1, RELATIVE=2, REGISTER=3, LABEL=4};
+/*A->absolute, RELOCATABLE->relative, EXTERNAL->external/entry*/
+typedef enum eraTypes {ABSOLUTE='A', RELOCATABLE='R', EXTERNAL='E'} eraTypes;
+
+
+
+/*Directive string constants, to be compared with input*/
+
+#define DATA_DIRECTIVE_STR ".data"
+#define STRING_DIRECTIVE_STR ".string"
+#define ENTRY_DIRECTIVE_STR ".entry"
+#define EXTERN_DIRECTIVE_STR ".extern"
+
+/*Maximum line buffer size*/
+#define MAX_FILENAME 50
+#define MAX_LINE_LENGTH 80
+#define MAX_LABEL_LENGTH 30 /* the length including the ':' is 31*/
+
+#define EXTERNAL_SYMBOL_ADDRESS 0
+
+
+/*Number of registers*/
+#define NUM_OF_REGISTERS 8
+#define INTITIAL_IC_VALUE 100 
+#define INTITIAL_DC_VALUE 0 
+
+/*Maximum and minimum values that can be stored in 10 bits*/
+#define MAX_NUMBER_DATA 2047 /*todo: how??*/
+#define MIN_NUMBER_DATA -2048
+#define MAX_NUM_IMMEDIATE 511 /*fixed*/
+#define MIN_NUMBER_IMMEDIATE -511
+/*Amoount of opcodes*/
+#define OPCODES_COUNT 16
+
+/*Extrnsions for file i/o*/
+#define AS_EXTENSION ".as"
+#define TXT_EXTENSION ".txt"
+#define OB_EXTENSION ".ob"
+#define ENT_EXTENSION ".ent"
+#define EXT_EXTENSION ".ext"
+
+/*Opcodes*/
+#define OPCODE_MOV "mov"
+#define OPCODE_CMP "cmp"
+#define OPCODE_ADD "add"
+#define OPCODE_SUB "sub"
+#define OPCODE_NOT "not"
+#define OPCODE_CLR "clr"
+#define OPCODE_LEA "lea"
+#define OPCODE_INC "inc"
+#define OPCODE_DEC "dec"
+#define OPCODE_JMP "jmp"
+#define OPCODE_BNE "bne"
+#define OPCODE_RED "red"
+#define OPCODE_PRN "prn"
+#define OPCODE_JSR "jsr"
+#define OPCODE_RTS "rts"
+#define OPCODE_STOP "stop"
+
+
+/*my mass*/
+#define NUM_OF_IMMEDIATE_OPERANDS 5
+#define NUM_OF_RELAVITVE_OPERANDS 3
+#define IDENTICAL 0;
+
 
 /*errorHandler.c functions*/
 void addError(char * err, int line, char * str);
@@ -49,65 +114,5 @@ void freeErrors();
 int hasError();
 int getMaxLine();
 
-/*symbolList.c functions*/
-void addSymbol(char *label, int address, int isCode, int isData, int isExternal, int isEntry, int lineNumber);
-void freeSymbols();
-void doesSymbolExist(char * label, int line);
-symbol * searchSymbol(char * label);
-void updateDataSymbols(int IC);
-
-
-
-/*utilsFirstPass.c*/
-int isLegalLabel(char *token, int lineNumber);
-int isLablelConvention(char *token);
-void checkAllocation(void * ptr);
-directiveType getDirectiveType(char * token);
-/*int getDirectiveType(char * token);*/
-bool isComment(char * token);
-
-/*entryList.c functions*/
-void addEntry(char * label, int line);
-void freeEntries();
-int doesEntryExist(char * label);
-entry * getUndefinedEntry();
-entry * getEntryHead();
-
-/*operations.c functions*/
-
-/*wordsList.c functions*/
-void addWordNode(wordNode *node);
-void freeWords();
-operandWord *getLabelWord();
-wordNode *getWordsHead();
-int countWords();
-/*void updateAddresses();*/
-
-
-/*my mass!!!!*/
-bool isImmediateAddress(char *token);
-bool isRelative(char * token);
-bool isRegister(char * token);
-bool isOperation(char *token);
-bool isLegalImmediateAddress(char *token, int fileLineNumber, int *num);
-void setCommandWord(wordNode *wordNodePtr, instruction *currentInstruction, int *IC);
-bool setImmediateOperandWord(wordNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-bool setRegisterOperandWord(wordNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-bool setRelativeOperand(wordNode *wordNodePtr, char *token, int fileLineNumber, int *ICs);
-bool setLabelOperand(wordNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-int getTokenType(char * token);
-void setOperandWord(bool *errorFlag, wordNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-void analyzeOperation(char * token, int fileLineNumber, int *IC, char *label);
-
-
-int isValidNumber(char *numberStr, int fileLineNumber, long int *currentNumber);
-void addData(unsigned short int value, int *DC);
-
-bool isDirectiveConvention(char * token);
-void setExternal(char *type, int fileLineNumber);
-symbol *getSymbolHead();
-
-bool isLegalCommadConvention(char *commandLine, int fileLineNumber);
-int iscomma(char c);
 
 #endif

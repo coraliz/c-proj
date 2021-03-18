@@ -1,4 +1,5 @@
-#include "header.h"
+#include "utilsFirstPass.h"
+
 
 /*This function checks if pointer is null*/
 void checkAllocation(void *ptr)
@@ -33,16 +34,19 @@ int isLegalLabel(char *token, int lineNumber)
   if (!isalpha((int)*token))
   {
     addError("Labels must start with a letter", lineNumber, token);
+    printf("\tERROR: the label \'%s\' must start with a letter (line %d)\n", token, lineNumber);
     return false;
   }
   else if (tokenLength > MAX_LABEL_LENGTH)
   {
     addError("label is too long character", lineNumber, token);
+    printf("\tERROR: the label \'%s\' is a too long string (line %d)\n", token, lineNumber);
     return false;
   }
-  else if (isOperation(token) || isRegister(token))
+  else if (isOperation(token) || isRegister(token) || isDirective(token))
   {
     addError("This label name is reserved", lineNumber, token);
+    printf("\tERROR: \'%s\' is a reserved label (line %d)\n", token, lineNumber);
     return false;
   }
   else
@@ -53,8 +57,8 @@ int isLegalLabel(char *token, int lineNumber)
       if (!isalpha(currentChar) && !isdigit(currentChar))
       {
         /* this is not an alpha and not a digit*/
-        printf("\t###Invalid character: %c\n", currentChar);
         addError("Invalid character", lineNumber, token);
+        printf("\tERROR: \'%c\' is an invalid char (line %d)\n", currentChar, lineNumber);
         return false;
       }
     }
@@ -67,7 +71,7 @@ bool isComment(char *token)
 {
   if (*token == ';')
   {
-    printf("\t##ITS A COMMENT\n");
+    printf("\t###ITS A COMMENT\n");
     return true;
   }
   else
@@ -80,40 +84,7 @@ bool isComment(char *token)
 it will return an enum int of the proper directive, or an error flag
 if there's no such directive. if the string doesn't start with ".",
 it will return an enum defined as NONE, meaning it is not a directive*/
-directiveType getDirectiveType(char *token)
-{
-  /*if first char is '.'*/
-  if (*token == '.')
-  {
-    /*return enum corresponding to the directive*/
-    if (!strcmp(token, DATA_DIRECTIVE_STR))
-    {
-      return DATA_DIRECTIVE;
-    }
-    else if (!strcmp(token, STRING_DIRECTIVE_STR))
-    {
-      return STRING_DIRECTIVE;
-    }
-    else if (!strcmp(token, ENTRY_DIRECTIVE_STR))
-    {
-      return ENTRY_DIRECTIVE;
-    }
-    else if (!strcmp(token, EXTERN_DIRECTIVE_STR))
-    {
-      return EXTERN_DIRECTIVE;
-    }
-    else
-    {
-      /*return error*/
-      return UNDEFINED_DIRECTIVE;
-    }
-  }
-  /*if this isn't a directive*/
-  else
-  {
-    return NOT_A_DIRECTIVE;
-  }
-}
+
 
 bool isDirectiveConvention(char *token)
 {
@@ -129,70 +100,80 @@ int iscomma(char c)
   return c == ',';
 }
 
+
+void ignoreWhiteSpaces(int *i, char *str){
+  while((str[*i] != '\0')&&(isspace((int)str[*i])))
+  {
+    (*i)++;
+  }
+}
+
+void ignoreChars(int *i, char *str){
+  while((str[*i] != '\0')&&(!isspace((int)str[*i]))&&(!iscomma(str[*i])))
+  {
+    (*i)++;
+  }
+}
+
+
 bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
 {
   /*# TODO: commas count?*/
   int i = 0;
-  int commaCount = 0;
-  bool commaFlag = false;
-  printf("\t###line: *%s*\n", commandLine);
+  bool missingCommaFlag = false;
+  printf("\n\t###line: *%s*\n", commandLine);
 
   if (!commandLine)
   {
     return true;
   }
   /*get th first char*/
-  while (isspace((int)commandLine[i]) && commandLine[i] != '\n')
-  {
-    ++i;
-  }
-  /*if the first char is a comma*/
+  ignoreWhiteSpaces(&i, commandLine);
   if (iscomma(commandLine[i]))
   {
     addError("The command parameters cannot start with a comma", fileLineNumber, NULL);
-    printf("\t###cannot have comma at the begining: %d\n", fileLineNumber);
+    printf("\tERROR: The command parameters cannot start with a comma (line %d).\n", fileLineNumber);
     return false;
   }
-  /*this is not a comma-countinue to sacen the line until we find commas sequence or '\n'*/
-  for (; i < (strlen(commandLine)); i++)
-  {
-    if (iscomma(commandLine[i]))
+  else{
+    /*this is not a comma-countinue to scan the line until we find commas sequence or '\0'*/
+    while(commandLine[i]!='\0')
     {
-      ++commaCount;
-      if (commaFlag)
-      {
-        addError("Consecutive commas were found", fileLineNumber, NULL);
-        printf("\t###too many commas on line: %d\n", fileLineNumber);
-        return false;
+      if(iscomma(commandLine[i])){
+        if(!missingCommaFlag){
+          printf("\tERROR: A sequence of comma occurrences was found (line %d).\n", fileLineNumber);
+          return false;
+        }
+        else{
+          missingCommaFlag=false;
+        }
       }
-      printf("\t###commaFlag is ture\n");
-      commaFlag = true;
+      else{
+        /*not a comma*/
+        if(missingCommaFlag){
+          printf("\tERROR: Missing a comma that will separate the different arguments (line %d).\n", fileLineNumber);
+          return false;
+        }
+        else{
+          missingCommaFlag=true;
+        }
+      }
+      ++i;
+      ignoreChars(&i, commandLine);
+      ignoreWhiteSpaces(&i, commandLine);
+    } /*end of while*/
+    if(!missingCommaFlag){
+      printf("\tERROR: A command line cannot end with a comma (line %d).\n", fileLineNumber);
+      return false;
     }
-    /*else if(isalpha((int)commandLine[i])||isdigit((int)commandLine[i])){*/
-    else if (!isspace((int)commandLine[i]))
-    {
-      printf("\t###commaFlag is false: *%c**%d*\n", commandLine[i], i);
-      commaFlag = false;
+    else{
+      return true;
     }
   }
-  printf("\t###is here: *%c**%d*\n", commandLine[i], i);
-  if (commaFlag)
-  {
-    addError("Consecutive commas were found", fileLineNumber, NULL);
-    printf("\t###too many commas on line: %d\n", fileLineNumber);
-    return false;
-  }
-  /*if(commaCount==0){
-    addError("Commas are required between each of the command operands", fileLineNumber, NULL);
-    printf("\t###Commas are required between each of the command operands %d", commaCount);
-    return false;    
-  }*/
-  printf("\t###commaCount %d\n", commaCount);
-  printf("\t###good line\n");
-  return true;
 }
+   
 
-void setExternal(char *str, int fileLineNumber)
+void setExternal(char *str, int fileLineNumber, bool *errorFlag)
 {
   char *token;
   char *externalLabel;
@@ -200,6 +181,8 @@ void setExternal(char *str, int fileLineNumber)
   if (!(token = strtok(NULL, " \t\n")))
   {
     addError("This directive must have a label parameter", fileLineNumber, NULL);
+    printf("\tERROR: This directive must get a label as a parameter (line %d).\n", fileLineNumber);
+    *errorFlag=true;
     return;
   }
   else
@@ -210,18 +193,23 @@ void setExternal(char *str, int fileLineNumber)
       if (!strcmp(str, ENTRY_DIRECTIVE_STR))
       {
         addEntry(externalLabel, fileLineNumber);
-        printf("\n\t@@@added the entry: %s", externalLabel);
+        printf("\n\t###added the entry: %s", externalLabel);
       }
       else
       {
         /*this is an extern label*/
-        addSymbol(externalLabel, EXTERNAL_SYMBOL_ADDRESS, false, false, true, false, fileLineNumber);
+        addSymbol(externalLabel, EXTERNAL_SYMBOL_ADDRESS, false, false, true, false, fileLineNumber, errorFlag);
       }
     }
+    else{
+      /**/
+      *errorFlag=true;
+    }
   }
-  if ((token = strtok(NULL, "\n")))
+  if ((token = strtok(NULL, " \t\n")))
   {
     addError("This directive can only have only one parameter", fileLineNumber, NULL);
-    return;
+    printf("\tERROR: This directive can only get one label as a parameter (line %d).\n", fileLineNumber);
+    *errorFlag=true;
   }
 }
