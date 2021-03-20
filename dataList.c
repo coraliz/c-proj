@@ -5,12 +5,12 @@
 static dataNode *dataHead = NULL; /*pointer to the beginning of the data list*/
 
 /*internal functions internal declaration*/
-void addNumber(char *number, int fileLineNumber, int *DC, bool *hasError);
+void addNumber(char *number, inputFileLine *fileLine, int *DC, bool *hasError);
 
 /*This function gets a string of a single number, the current file line number and a pointer to the data counter and the errors flag.
 It tries to convert the number to an integer, if the conversion is successful it defines it in the data image and updates DC value. 
 If there is an error it prints it to the user screen with the relevant line number in the file and change 'hasError' to true.*/
-void addNumber(char *number, int fileLineNumber, int *DC, bool *hasError)
+void addNumber(char *number, inputFileLine *fileLine, int *DC, bool *hasError)
 {
   char *errorPtr = NULL;
   long int tmpNum;
@@ -26,26 +26,26 @@ void addNumber(char *number, int fileLineNumber, int *DC, bool *hasError)
     }
     else
     {
-      printf("\tERROR: \'%s\' is an invalid number (line %d).\n", number, fileLineNumber);
+      VERBOSE_PRINTING(fileLine, ("ERROR: \'%s\' is an invalid number\n", number)); 
       *hasError = true;
       return;
     }
   }
   if ((tmpNum < MIN_NUMBER_VALUE) || (tmpNum > MAX_NUMBER_VALUE))
   {
-    printf("The number %s is out of range (line %d)\n", number, fileLineNumber);
+    VERBOSE_PRINTING(fileLine, ("ERROR: The number %s is out of range\n", number)); 
     *hasError = true;
     return;
   }
   addData(((unsigned short int)tmpNum), DC);
 }
 
-void addNumbers(char *nums, int fileLineNumber, int *DC, bool *hasError)
+void addNumbers(char *nums, inputFileLine *fileLine, int *DC, bool *hasError)
 {
   char *singleNum;
   if (!nums)
-  {
-    printf("\tERROR: you must define numbers that are separated by commas after the \'.data\' directive (line %d).\n", fileLineNumber);
+  { 
+    VERBOSE_PRINTING(fileLine, ("ERROR: you must define numbers that are separated by commas after the \'.data\' directive\n"));
     *hasError = true;
     return;
   }
@@ -53,7 +53,7 @@ void addNumbers(char *nums, int fileLineNumber, int *DC, bool *hasError)
   singleNum = strtok(nums, ",");
   while (singleNum)
   {
-    addNumber(singleNum, fileLineNumber, DC, hasError);
+    addNumber(singleNum, fileLine, DC, hasError);
     singleNum = strtok(NULL, ",");
   }
 }
@@ -81,12 +81,12 @@ void addData(unsigned short int value, int *DC)
   (*DC)++;
 }
 
-void addString(char *string, int fileLineNumber, int *DC, bool *hasError)
+void addString(char *string, inputFileLine *fileLine, int *DC, bool *hasError)
 {
   /*checks whether the string is empty or equal to "*/
   if ((!string) || (!strcmp(string, "\"")))
   {
-    printf("\tERROR: You must define a string after a '.string' directive surrounded by quotation marks (line %d).\n", fileLineNumber);
+    VERBOSE_PRINTING(fileLine, ("ERROR: You must define a string after a '.string' directive surrounded by quotation marks\n")); 
     *hasError = true;
     return;
   }
@@ -99,7 +99,7 @@ void addString(char *string, int fileLineNumber, int *DC, bool *hasError)
   else
   {
     /*it's not surrounded by quotation marks*/
-    printf("\tERROR: This string does not surrounded by quotation marks (line %d).\n", fileLineNumber);
+    VERBOSE_PRINTING(fileLine, ("ERROR: This string does not surrounded by quotation marks\n"));
     *hasError = true;
     return;
   }

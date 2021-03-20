@@ -18,7 +18,7 @@ bool doesEntryExist(char *label)
   return false;
 }
 
-void addEntry(char *label, int fileLineNumber)
+void addEntry(char *label, inputFileLine *fileLine)
 {
   entryNode *newEntry = NULL;
   if (doesEntryExist(label))
@@ -30,10 +30,14 @@ void addEntry(char *label, int fileLineNumber)
   newEntry = (entryNode *)malloc(sizeof(entryNode));
   checkMemoryAllocation(newEntry);
   /*copy the label*/
-  newEntry->label = malloc(sizeof(char) * MAX_LABEL_LENGTH);
+  newEntry->label = (char *)malloc(sizeof(char) * MAX_LABEL_LENGTH);
+  checkMemoryAllocation(newEntry->label);
   strcpy(newEntry->label, label);
+  /*copy the line details*/
+  newEntry->line = (inputFileLine *)calloc(1, sizeof(inputFileLine));
+  checkMemoryAllocation(newEntry->line);
+  memcpy(newEntry->line, fileLine, sizeof(inputFileLine));
   /*set entry node values*/
-  newEntry->line = fileLineNumber;
   newEntry->checked = false;
   newEntry->next = NULL;
   /*adds entry node to the linked list*/
@@ -62,6 +66,7 @@ void freeEntries()
     entryNode *tmp = entryPtr;
     entryPtr = entryPtr->next;
     free(tmp->label); /*free the label memory allocation*/
+    free(tmp->line);
     free(tmp);
   }
   entryHead = NULL;

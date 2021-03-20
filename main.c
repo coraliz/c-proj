@@ -8,12 +8,11 @@
 #include "secondScan.h"
 
 void removeFileWithExtension(char* fileName, char *fileExtension){
-  /*we don't care if the file deletion was successful*/
+  /*we don't care if the file deletion was successful, because if it wasn't it also won't be able to create the new files (we will get an error then)*/
   char fullFileName[MAX_FILENAME_LENGTH];
   strcpy(fullFileName, fileName);
   remove(strcat(fullFileName,fileExtension));
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -26,19 +25,17 @@ int main(int argc, char *argv[])
   if (argc == 1)
   {
     /*means only the program name was gives, without any input file*/
-    printf("\tERROR: No input file received for running the program.\n");
+    printf("\terror: No input file received for running the program.\n");
   }
   else
   {
     /*now we will now run the program on each of the input file*/
     for (fileIndex = 1; fileIndex < argc; fileIndex++)
     {
-      /*
       char fullFileName[MAX_FILENAME_LENGTH];
-      strcpy(fullFileName, argv[fileIndex]); //copy the filename from argv to the full filename string
-      strcat(fullFileName, AS_EXTENSION);    //add the .as extension to the full filename.
+      strcpy(fullFileName, argv[fileIndex]); /*copy the filename from argv to the full filename string*/
+      strcat(fullFileName, AS_EXTENSION);    /*add the .as extension to the full filename.*/
       printf("\n\t###start to scan the file: %s###\n", fullFileName);
-      */
       /*Tries to open the file and if successful, runs the program*/
       if ((currentFile = openFile(argv[fileIndex], "r", AS_EXTENSION)))
       {
@@ -48,7 +45,7 @@ int main(int argc, char *argv[])
         removeFileWithExtension(argv[fileIndex], EXT_EXTENSION);
         /*we will continue to run the code only if the first scan was successful, 
         otherwise we have code errors*/
-        if (firstScan(currentFile, argv[fileIndex], &IC, &DC))
+        if (firstScan(currentFile, fullFileName, &IC, &DC))
         {
           /*add the value of IC for the existing values ​​in the data image*/
           updateDataSymbols(IC);

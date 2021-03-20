@@ -19,7 +19,7 @@ bool setUndefinedLabelWords(){
       /*in this case we did not find the labels in the symbol table, 
       meaning it was not defined in our assembly code*/
       hasError=true;
-      printf("\tERROR: The label \'%s\' is not defined (line %d).\n", searchedLabelWord->labelName, searchedLabelWord->fileLineNumber);
+      VERBOSE_PRINTING(searchedLabelWord->fileLine,( "ERROR: The label \'%s\' is not defined\n", searchedLabelWord->labelName));
     }
     /*we found the label in the table of symbols and now we will define the appropriate values for it*/
     else if(searchedLabelWord->isRelative)
@@ -27,7 +27,7 @@ bool setUndefinedLabelWords(){
       /*chek first if this label is defined as a relative label*/
       if(tmpSymbol->isCode==false){
         hasError=true;
-        printf("\tERROR: The label \'%s\' is not an instruction, threrefore can not be assigned as a relative address (line %d).\n", searchedLabelWord->labelName, searchedLabelWord->fileLineNumber);
+        VERBOSE_PRINTING(searchedLabelWord->fileLine,( "ERROR: The label \'%s\' is not an instruction, threrefore can not be assigned as a relative address\n", searchedLabelWord->labelName));
         /*TODO: make sure the indication is good*/
       }
       else{
@@ -67,7 +67,7 @@ bool checkEntriesDefinitions(){
       /*in this case we did not find the entry in the symbol table, 
       meaning it was not defined in our assembly code*/
       hasError=true;
-      printf("\tERROR: The entry \'%s\' is not defined (line %d).\n", entryLabel->label, entryLabel->line);
+      VERBOSE_PRINTING(entryLabel->line,( "ERROR: The entry \'%s\' is not defined\n", entryLabel->label));
     }
     else
     {
@@ -75,7 +75,7 @@ bool checkEntriesDefinitions(){
       if(tmpSymbol->isExtern){
         /*if this condition is true this label has also been declared as extern which is not allowed*/
         hasError=true;
-        printf("\tERROR: The entry \'%s\' cannot be defined as entry and extren at the same code (line %d).\n", entryLabel->label, entryLabel->line);
+        VERBOSE_PRINTING(entryLabel->line,( "ERROR: The entry \'%s\' is not defined\n", entryLabel->label));
       }
       else{
         /*was declared as entry only*/
@@ -88,14 +88,9 @@ bool checkEntriesDefinitions(){
   return (!hasError);
 }
 
-bool secondScan(int IC, int DC)
+bool secondScan()
 {
   /*If the overall count of words and data exceeds the memory limit, add error and return false*/
-  if (((IC-INITIAL_IC_VALUE) + DC) > 4096 )
-  {
-    printf("\tERROR: This file exceeded the memory limit.\n"); /*TODO: try to add the name file*/
-    return false;
-  }
   if((setUndefinedLabelWords())&(checkEntriesDefinitions())){
     return true;
   }

@@ -9,7 +9,6 @@
 #include "instructionsList.h"
 
 /*defines*/
-#define MAX_FILENAME_LENGTH 1000
 /*files extensions*/
 #define AS_EXTENSION ".as"
 #define OB_EXTENSION ".ob"

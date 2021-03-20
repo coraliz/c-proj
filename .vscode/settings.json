@@ -1,19 +1,6 @@
 {
     "files.associations": {
-        "header.h": "c",
-        "datalist.h": "c",
-        "firstpass.h": "c",
-        "files.h": "c",
-        "symbolslist.h": "c",
-        "secondpass.h": "c",
-        "instructionScan.h": "c",
-        "wordslist.h": "c",
-        "utilsfirstpass.h": "c",
-        "entrylist.h": "c",
-        "stdio.h": "c",
-        "scanutils.h": "c",
         "firstscan.h": "c",
-        "generalutils.h": "c",
-        "instructionslist.h": "c"
+        "secondscan.h": "c"
     }
 }

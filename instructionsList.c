@@ -32,10 +32,12 @@ void freeInstructions()
     if (tmp->sourceOperandWord.labelName)
     {
       free(tmp->sourceOperandWord.labelName);
+      free(tmp->sourceOperandWord.fileLine);
     }
     if (tmp->destinationOperandWord.labelName)
     {
       free(tmp->destinationOperandWord.labelName);
+      free(tmp->sourceOperandWord.fileLine);
     }
     free(tmp);
   }
@@ -47,10 +49,12 @@ void freeInstruction(instructionNode *instructionNodePtr)
   if (instructionNodePtr->sourceOperandWord.labelName)
   {
     free(instructionNodePtr->sourceOperandWord.labelName);
+    free(instructionNodePtr->sourceOperandWord.fileLine);
   }
   if (instructionNodePtr->destinationOperandWord.labelName)
   {
     free(instructionNodePtr->destinationOperandWord.labelName);
+    free(instructionNodePtr->destinationOperandWord.fileLine);
   }
   free(instructionNodePtr);
 }

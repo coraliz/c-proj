@@ -9,7 +9,7 @@ typedef struct entryNodes
 {
   char *label;
   int checked;
-  int line;
+  inputFileLine *line;
   struct entryNodes *next;
 } entryNode;
 
@@ -18,7 +18,7 @@ typedef struct entryNodes
 /*This function gets the entry label name and the file line number. 
 It adds the new entry node to the linked entries list after defining all its details using the label name 
 and the line number appears in the code.*/
-void addEntry(char *label, int fileLineNumber);
+void addEntry(char *label, inputFileLine *fileLine);
 
 /*This function frees all the memory structures we used to define the linked list*/
 void freeEntries();

@@ -39,11 +39,11 @@ instruction *getInstruction(char *token);
 
 /*This function gets a token from the command line and checks if it is a legal label. 
 If so, returning true. Otherwise prints an error and returns false.*/
-bool isLegalLabel(char *token, int lineNumber);
+bool isLegalLabel(char *token, inputFileLine *fileLine);
 
 /*This function gets the parameters line in the command and its line number in the input file. 
 Its purpose is to check if the command is written in the correct convention in terms of the number of commas that appear in it 
 and that does not start or end with a comma.*/
-bool isLegalCommadConvention(char *paramsLine, int fileLineNumber);
+bool isLegalCommadConvention(char *paramsLine, inputFileLine *fileLine);
 
 #endif

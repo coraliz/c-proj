@@ -43,12 +43,22 @@ typedef enum booleans {false=0, true=1} bool;
 #define MAX_NUMBER_VALUE 2047
 #define MIN_NUMBER_VALUE -2048
 
+#define MAX_FILENAME_LENGTH 1000
 #define MAX_LINE_LENGTH 81 /*maximum line buffer size- includes the char '\n' */
 #define MAX_LABEL_LENGTH 31 /*count the '/0' char*/
 #define EXTERNAL_SYMBOL_ADDRESS 0
 
+#define VERBOSE_PRINTING(fileLine,args) (printf("FILE: %s LINE: %d ", fileLine->fileName, fileLine->lineNumber), printf args);
+
 /*era types as enum - A->absolute, RELOCATABLE->relative, EXTERNAL->external/entry*/
 typedef enum eraTypes {ABSOLUTE='A', RELOCATABLE='R', EXTERNAL='E'} eraType;
+
+/*use this struct to represents the current file line that we try to read*/
+typedef struct inputFileLines
+{
+  char fileName[MAX_FILENAME_LENGTH];
+  int lineNumber;
+} inputFileLine;
 
 
 #endif

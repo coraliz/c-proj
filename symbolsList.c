@@ -3,10 +3,10 @@
 static symbol *symbolHead = NULL;
 
 /*add new symbol to list*/
-void addSymbol(char *label, int address, int isCode, int isData, int isExtern, int isEntry, int lineNumber, bool *errorFlag)
+void addSymbol(char *label, int address, int isCode, int isData, int isExtern, int isEntry, inputFileLine *fileLineNumber, bool *errorFlag)
 {
   symbol *newSymbol = NULL;
-  if(!doesSymbolExist(label, lineNumber))
+  if(!doesSymbolExist(label, fileLineNumber))
   {
     /*Allocate memory for the new symbol*/
 	  newSymbol = (symbol *)malloc(sizeof(symbol));
@@ -70,14 +70,14 @@ void freeSymbols()
   symbolHead = NULL;
 }
 
-bool doesSymbolExist(char *label, int line)
+bool doesSymbolExist(char *label, inputFileLine *fileLine)
 {
   symbol *ptr = symbolHead;
   while (ptr)
   {
     if (!strcmp(ptr->label, label))
     {
-      printf("\tERROR: There are multiple symbols with the name: %s (line %d).\n", label, line);
+      VERBOSE_PRINTING(fileLine,( "ERROR: There are multiple symbols with the name: %s\n", label));
       return true;
     }
     ptr = ptr->next;

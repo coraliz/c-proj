@@ -22,7 +22,7 @@ FILE *openFile(char *filename, char *mode, char *extension)
   if (!(currentFile = fopen(fullFileName, mode)))
   {
     /*couldn't open the file*/
-    printf("\tERROR: The file \'%s\' could not be opened.\n", fullFileName);
+    printf("ERROR: The file \'%s\' could not be opened\n", fullFileName);
     return NULL;
   }
   /*returns a pointer to the file*/

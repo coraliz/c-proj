@@ -34,7 +34,6 @@ bool isDirective(char *token)
 {
   char str[MAX_LABEL_LENGTH] = ".";
   strncat(str, token, MAX_LABEL_LENGTH);
-  printf("\t###strncat is: %s", str);
   if ((!strcmp(str, DATA_DIRECTIVE_STR)) || (!strcmp(str, STRING_DIRECTIVE_STR)) ||
       (!strcmp(str, ENTRY_DIRECTIVE_STR)) || (!strcmp(str, EXTERN_DIRECTIVE_STR)))
   {
@@ -46,14 +45,15 @@ bool isDirective(char *token)
 bool isRegister(char *token)
 {
   int i;
+  printf("check: %s, len is: %ld, token[0] is: %c, token[1] is: %c\n", token, strlen(token), token[0], token[1]);
   if (strlen(token) == REGISTER_STR_LENGTH && token[0] == 'r' && isdigit((int)(token[1])))
   {
     for (i = 0; i < REGISTERS_COUNT; i++)
     {
       if (!strcmp(token, registers[i]))
       {
-      }
       return true;
+      }
     }
   }
   return false;
@@ -72,7 +72,7 @@ instruction *getInstruction(char *token)
   return NULL;
 }
 
-bool isLegalLabel(char *token, int lineNumber)
+bool isLegalLabel(char *token, inputFileLine *fileLine)
 {
   int i, tokenLength;
   char currentChar;
@@ -80,17 +80,17 @@ bool isLegalLabel(char *token, int lineNumber)
   /*check if first char is letter*/
   if (!isalpha((int)*token))
   {
-    printf("\tERROR: the label \'%s\' must start with a letter (line %d)\n", token, lineNumber);
+    VERBOSE_PRINTING(fileLine,( "ERROR: the label \'%s\' must start with a letter\n", token));
     return false;
   }
   else if (tokenLength > MAX_LABEL_LENGTH)
   {
-    printf("\tERROR: the label \'%s\' is a too long string (line %d)\n", token, lineNumber);
+    VERBOSE_PRINTING(fileLine,( "ERROR: the label \'%s\' is a too long string\n", token));
     return false;
   }
   else if (getInstruction(token) || isRegister(token) || isDirective(token))
   {
-    printf("\tERROR: \'%s\' is a reserved label (line %d)\n", token, lineNumber);
+    VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' is a reserved label\n", token));
     return false;
   }
   else
@@ -101,7 +101,7 @@ bool isLegalLabel(char *token, int lineNumber)
       if (!isalpha(currentChar) && !isdigit(currentChar))
       {
         /* this is not an alpha and not a digit*/
-        printf("\tERROR: \'%c\' is an invalid character in this label definition (line %d)\n", currentChar, lineNumber);
+        VERBOSE_PRINTING(fileLine,( "ERROR: \'%c\' is an invalid character in this label definition\n", currentChar));
         return false;
       }
     }
@@ -137,7 +137,7 @@ void ignoreChars(int *i, char *str){
   }
 }
 
-bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
+bool isLegalCommadConvention(char *commandLine, inputFileLine *fileLine)
 {
   int i = 0;
   bool missingCommaFlag = false;
@@ -150,7 +150,7 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
   ignoreWhiteSpaces(&i, commandLine);
   if (isComma(commandLine[i]))
   {
-    printf("\tERROR: The command parameters cannot start with a comma (line %d).\n", fileLineNumber);
+    VERBOSE_PRINTING(fileLine, ("ERROR: The command parameters cannot start with a comma\n"));
     return false;
   }
   else{
@@ -159,7 +159,7 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
     {
       if(isComma(commandLine[i])){
         if(!missingCommaFlag){
-          printf("\tERROR: A sequence of comma occurrences was found (line %d).\n", fileLineNumber);
+          VERBOSE_PRINTING(fileLine, ("ERROR: A sequence of comma occurrences was found\n"));
           return false;
         }
         else{
@@ -170,7 +170,7 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
       else{
         /*not a comma*/
         if(missingCommaFlag){
-          printf("\tERROR: Missing a comma that will separate the different arguments (line %d).\n", fileLineNumber);
+          VERBOSE_PRINTING(fileLine, ("ERROR: Missing a comma that will separate the different arguments\n"));
           return false;
         }
         else{
@@ -182,7 +182,7 @@ bool isLegalCommadConvention(char *commandLine, int fileLineNumber)
       ignoreWhiteSpaces(&i, commandLine);
     } /*end of while*/
     if(!missingCommaFlag){
-      printf("\tERROR: A command line cannot end with a comma (line %d).\n", fileLineNumber);
+      VERBOSE_PRINTING(fileLine, ("ERROR: A command line cannot end with a comma\n"));      
       return false;
     }
     else{

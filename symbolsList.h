@@ -21,7 +21,7 @@ typedef struct symbols
 /*Gets the name of the labels, its address in memory, its type(entry|extern|code|data), 
 the relevant line of code in which it is written and a pointer to the error flag.
 Its purpose is to define the new icon and add it to the list of icons. if an error occured, changes the error flag to true*/
-void addSymbol(char *label, int address, int isCode, int isData, int isExtern, int isEntry, int lineNumber, bool *errorFlag);
+void addSymbol(char *label, int address, int isCode, int isData, int isExtern, int isEntry, inputFileLine *fileLineNumber, bool *errorFlag);
 
 /*Receives the final value of the instruction counter. 
 Its purpose is to update the address of all the icons in memory belonging to the data image according to the value of the counter.*/
@@ -33,7 +33,7 @@ void freeSymbols();
 /*This function is given a specific label name and the line that appears in the code. 
 Its purpose is to check if the icon already exists in the icon table.
 it so, then returns true and prints an error on the user screen. Otherwise returns fasle.*/
-bool doesSymbolExist(char *label, int fileLineNumber);
+bool doesSymbolExist(char *label, inputFileLine *fileLine);
 
 /*
 This function gets a label name and checks whether it appears in the table of symbols or not. 

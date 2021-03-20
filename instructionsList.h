@@ -23,7 +23,7 @@ typedef struct operandWords
   int isExtern;
   int isRelative;
   int hasMachineCode;
-  int fileLineNumber;
+  inputFileLine *fileLine;
   unsigned short int machineCode;
 } operandWord;
 

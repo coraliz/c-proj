@@ -24,16 +24,16 @@
 #define JSR_STR "jsr"
 
 /*internal functions internal declaration*/
-bool isLegalImmediateAddress(char *token, int fileLineNumber, int *num);
+bool isLegalImmediateAddress(char *token, inputFileLine *fileLine, int *num);
 operandType getTokenType(char *token);
 void stopInstructionScan(instructionNode *wordPtr, bool *errorsFlag);
 /*The following functions are for defining the code of the different word types generated as a result of the different commands*/
 void setCommandWord(instructionNode *wordNodePtr, instruction *currentInstruction, int *IC);
-bool setImmediateOperandWord(instructionNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-bool setRegisterOperandWord(instructionNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-bool setRelativeOperand(instructionNode *wordNodePtr, char *token, int fileLineNumber, int *IC);
-bool setLabelOperand(instructionNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
-void setOperandWord(bool *hasError, instructionNode *wordNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC);
+bool setImmediateOperandWord(instructionNode *wordNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC);
+bool setRegisterOperandWord(instructionNode *wordNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC);
+bool setRelativeOperand(instructionNode *wordNodePtr, char *token, inputFileLine *fileLine, int *IC);
+bool setLabelOperand(instructionNode *wordNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC);
+void setOperandWord(bool *hasError, instructionNode *wordNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC);
 
 /*The function receives a token from the command line and returns the operand type 
 (immediate address, relative address, register or label*/
@@ -60,26 +60,22 @@ operandType getTokenType(char *token)
 /*Receives a line number token and  integer number to point on the conversed number. 
 It checks if the immediate address is set correctly - checks if it starts with the # label and if it is a number that 
 is in the allowed range. If it does not it prints an error with the relevant line in the input file and the file name.*/
-bool isLegalImmediateAddress(char *token, int fileLineNumber, int *num)
+bool isLegalImmediateAddress(char *token, inputFileLine *fileLine, int *num)
 {
   char *immediateStr, *errorptr;
   immediateStr = token;
   immediateStr++;
-  if(isspace((int)(*immediateStr))){
-    printf("\tERROR: The immediate address should appear immediately after the \'#\' character (line %d).\n", fileLineNumber);
-    return false;
-  }
   /*the immediate vale defined well, now we try to convert it to number*/
   *num = strtol(immediateStr, &errorptr, DECIMAL_BASE);
   /*TODO: checksyntex maybe it's \0 ? */
   if (*errorptr != '\0')
   {
-    printf("\tERROR: \'%s\' is an invalid number (line %d).\n", immediateStr, fileLineNumber);
+    VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' is an invalid number\n", immediateStr));
     return false;
   }
   if (*num > MAX_NUMBER_VALUE || *num < MIN_NUMBER_VALUE)
   {
-    printf("\tERROR: The immediate number \'%d\' is out of range (line %d).\n", *num, fileLineNumber);
+    VERBOSE_PRINTING(fileLine,( "ERROR: The immediate number \'%d\' is out of range\n", *num));
     return false;
   }
   return true;
@@ -108,7 +104,7 @@ void setCommandWord(instructionNode *instructionNodePtr, instruction *currentIns
 a token from the command line which is an immediate operand, the current line number in the file, 
 a flag whose value symbols if it is a source operand and a pointer to IC (instruction counter).
 Its purpose is to define an immediate word and return true if succeed, otherwise false.*/
-bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC)
+bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC)
 {
   operandWord *currentOperandWord;
   int immediateAddress;
@@ -118,7 +114,7 @@ bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, i
     /*only these instructions can get an Immediate address in the source operand: ("mov", "cmp", "add", "sub", "prn")*/
     if (strcmp(MOV_STR, instructionName) && strcmp(CMP_STR, instructionName) && strcmp(ADD_STR, instructionName) && strcmp(SUB_STR, instructionName) && strcmp(PRN_STR, instructionName))
     {
-      printf("\tERROR: \'%s\' command can't take an immediate number as a source operand (line %d).\n", instructionName, fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' command can't take an immediate number as a source operand\n", instructionName));
       return false;
     }
     instructionNodePtr->commandWord.machineCode |= IMMEDIATE << BITS_TO_SOURCE_ADDRESSING_METHOD;
@@ -130,7 +126,7 @@ bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, i
     /*only these instructions can get an immediate address in the destination operand: ("cmp", "prn")*/
     if (strcmp(CMP_STR, instructionName) && strcmp(PRN_STR, instructionName))
     {
-      printf("\tERROR: \'%s\' command can't take an immediate number as a destination operand (line %d).\n", instructionName, fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' command can't take an immediate number as a destination operand\n", instructionName));
       return false;
     }
     /*update destination addressing method to immediate*/
@@ -138,7 +134,7 @@ bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, i
     /*update currentOperandWord pointering*/
     currentOperandWord = &(instructionNodePtr->destinationOperandWord);
   }
-  if (isLegalImmediateAddress(token, fileLineNumber, &immediateAddress))
+  if (isLegalImmediateAddress(token, fileLine, &immediateAddress))
   {
     /*takes only the last bits that are relevant to unsigned numeber bit count*/
     currentOperandWord->machineCode = ((unsigned short int)immediateAddress); 
@@ -148,7 +144,9 @@ bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, i
     currentOperandWord->isRelative = false;
     currentOperandWord->hasMachineCode = true;
     currentOperandWord->decimalAddress = *IC;
-    currentOperandWord->fileLineNumber = fileLineNumber;
+    currentOperandWord->fileLine = (inputFileLine *)calloc(1, sizeof(inputFileLine));
+    checkMemoryAllocation(currentOperandWord->fileLine);
+    memcpy(currentOperandWord->fileLine, fileLine, sizeof(inputFileLine));
     return true;
   }
   /*this immediate number is illegal, the error has been printed*/
@@ -159,7 +157,7 @@ bool setImmediateOperandWord(instructionNode *instructionNodePtr, char *token, i
 a token from the command line which is an register operand, the current line number in the file, 
 a flag whose value symbols if it is a source operand and a pointer to IC (instruction counter).
 Its purpose is to define an register word and return true if succeed, otherwise false.*/
-bool setRegisterOperandWord(instructionNode *instructionNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC)
+bool setRegisterOperandWord(instructionNode *instructionNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC)
 {
   operandWord *currentOperandWord;
   int registerNum;
@@ -170,7 +168,7 @@ bool setRegisterOperandWord(instructionNode *instructionNodePtr, char *token, in
     if (!strcmp(LEA_STR, instructionName))
     {
       /*the command is 'lea'*/
-      printf("\tERROR: \'%s\' command can't take a register as a source operand (line %d).\n", instructionName, fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' command can't take a register as a source operand\n", instructionName));
       return false;
     }
     currentOperandWord = &(instructionNodePtr->sourceOperandWord);
@@ -182,7 +180,7 @@ bool setRegisterOperandWord(instructionNode *instructionNodePtr, char *token, in
     /*only these instructions can't get a register address as destination operand : ("jmp", "bne", "jsr")*/
     if ((!strcmp(JMP_STR, instructionName)) || (!strcmp(BNE_STR, instructionName)) || (!strcmp(JSR_STR, instructionName)))
     {
-      printf("\tERROR: \'%s\' command can't take a register as a destination operand (line %d).\n", instructionName, fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' command can't take a register as a destination operand\n", instructionName));
       return false;
     }
     instructionNodePtr->commandWord.machineCode |= REGISTER; /*destination*/
@@ -197,7 +195,9 @@ bool setRegisterOperandWord(instructionNode *instructionNodePtr, char *token, in
   currentOperandWord->isRelative = false;
   currentOperandWord->hasMachineCode = true;
   currentOperandWord->decimalAddress = *IC;
-  currentOperandWord->fileLineNumber = fileLineNumber;
+  currentOperandWord->fileLine = (inputFileLine *)calloc(1, sizeof(inputFileLine));
+  checkMemoryAllocation(currentOperandWord->fileLine);
+  memcpy(currentOperandWord->fileLine, fileLine, sizeof(inputFileLine));
   return true;
 }
 
@@ -205,19 +205,16 @@ bool setRegisterOperandWord(instructionNode *instructionNodePtr, char *token, in
 a token from the command line which is an relative operand, the current line number in the file, 
 a flag whose value symbols if it is a source operand and a pointer to IC (instruction counter).
 Its purpose is to define an relative word and return true if succeed, otherwise false.*/
-bool setRelativeOperand(instructionNode *instructionNodePtr, char *token, int fileLineNumber, int *IC)
+bool setRelativeOperand(instructionNode *instructionNodePtr, char *token, inputFileLine *fileLine, int *IC)
 {
   /*here it's only a destination operand*/
   char *instructionName = instructionNodePtr->commandWord.name;
   char *label = (token+1); /*take off the '%' char*/
-  if(isspace((int)*label)){
-    printf("\tERROR: The label should appear immediately after the \'%%\' character (line %d).\n", fileLineNumber);
-    return false;
-  }
+
   /*only these instructions can get a relative address as destination operand:("jmp", "bne", "jsr")*/
   if ((!strcmp(JMP_STR, instructionName)) || (!strcmp(BNE_STR, instructionName)) || (!strcmp(JSR_STR, instructionName)))
   {
-    if (setLabelOperand(instructionNodePtr, label, fileLineNumber, false, IC))
+    if (setLabelOperand(instructionNodePtr, label, fileLine, false, IC))
     {
       instructionNodePtr->destinationOperandWord.era = ABSOLUTE;
       instructionNodePtr->destinationOperandWord.isRelative = true;
@@ -234,7 +231,7 @@ bool setRelativeOperand(instructionNode *instructionNodePtr, char *token, int fi
     }
   }
   /*This is an order that should not have relative address*/
-  printf("\tERROR: \'%s\' gets the relative operand \'%s\' which is not is not allowed for this command (line %d).\n", instructionName, label, fileLineNumber);
+  VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' gets a relative operand which is not is not allowed for this command\n", instructionName));
   return false;
 }
 
@@ -242,7 +239,7 @@ bool setRelativeOperand(instructionNode *instructionNodePtr, char *token, int fi
 a token from the command line which is an label operand, the current line number in the file, 
 a flag whose value symbols if it is a source operand and a pointer to IC (instruction counter).
 Its purpose is to define an label word and return true if succeed, otherwise false.*/
-bool setLabelOperand(instructionNode *instructionNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC)
+bool setLabelOperand(instructionNode *instructionNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC)
 {
   operandWord *currentOperandWord;
   /*all instructions can get operand as direct*/
@@ -259,7 +256,7 @@ bool setLabelOperand(instructionNode *instructionNodePtr, char *token, int fileL
     currentOperandWord = &(instructionNodePtr->destinationOperandWord);
   }
 
-  if (isLegalLabel(token, fileLineNumber))
+  if (isLegalLabel(token, fileLine))
   {
     currentOperandWord->labelName = (char *)malloc(sizeof(char) * MAX_LABEL_LENGTH);
     checkMemoryAllocation(currentOperandWord->labelName);
@@ -267,7 +264,9 @@ bool setLabelOperand(instructionNode *instructionNodePtr, char *token, int fileL
     currentOperandWord->hasMachineCode = false;
     currentOperandWord->decimalAddress = *IC;
     currentOperandWord->era = RELOCATABLE;
-    currentOperandWord->fileLineNumber = fileLineNumber;
+    currentOperandWord->fileLine = (inputFileLine *)calloc(1, sizeof(inputFileLine));
+    checkMemoryAllocation(currentOperandWord->fileLine);
+    memcpy(currentOperandWord->fileLine, fileLine, sizeof(inputFileLine));
     return true;
   }
   else
@@ -281,13 +280,13 @@ bool setLabelOperand(instructionNode *instructionNodePtr, char *token, int fileL
 pointer to the words definitions in the current command, pointer to the token from the command line,
 the code line number, and a flag whose value symbolizes if it is a source operand, and a pointer to IC. 
 Its purpose is to use the above functions and define the operand word. If an error occured it changes the 'hasError' flag to true.*/
-void setOperandWord(bool *errorFlag, instructionNode *instructionNodePtr, char *token, int fileLineNumber, int isSourceOperand, int *IC)
+void setOperandWord(bool *errorFlag, instructionNode *instructionNodePtr, char *token, inputFileLine *fileLine, int isSourceOperand, int *IC)
 {
   int tokenType = getTokenType(token);
   switch (tokenType)
   {
   case IMMEDIATE:
-    if (!setImmediateOperandWord(instructionNodePtr, token, fileLineNumber, isSourceOperand, IC))
+    if (!setImmediateOperandWord(instructionNodePtr, token, fileLine, isSourceOperand, IC))
     {
       *errorFlag = true;
       return;
@@ -295,7 +294,7 @@ void setOperandWord(bool *errorFlag, instructionNode *instructionNodePtr, char *
     break;
 
   case REGISTER:
-    if (!setRegisterOperandWord(instructionNodePtr, token, fileLineNumber, isSourceOperand, IC))
+    if (!setRegisterOperandWord(instructionNodePtr, token, fileLine, isSourceOperand, IC))
     {
       *errorFlag = true;
       return;
@@ -303,7 +302,7 @@ void setOperandWord(bool *errorFlag, instructionNode *instructionNodePtr, char *
     break;
 
   case RELATIVE:
-    if (!setRelativeOperand(instructionNodePtr, token, fileLineNumber, IC))
+    if (!setRelativeOperand(instructionNodePtr, token, fileLine, IC))
     {
       *errorFlag = true;
       return;
@@ -311,7 +310,7 @@ void setOperandWord(bool *errorFlag, instructionNode *instructionNodePtr, char *
     break;
 
   case LABEL:
-    if (!(setLabelOperand(instructionNodePtr, token, fileLineNumber, isSourceOperand, IC)))
+    if (!(setLabelOperand(instructionNodePtr, token, fileLine, isSourceOperand, IC)))
     {
       *errorFlag = true;
       return;
@@ -329,24 +328,25 @@ void stopInstructionScan(instructionNode *wordPtr, bool *errorsFlag)
   *errorsFlag = true;
 }
 
-void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, bool *errorFlag)
+void setInstructionWords(char *token, inputFileLine *fileLine, int *IC, char *label, bool *errorFlag)
 {
   instruction *currentInstruction;
   char *params, *sourceOperandStr, *destinationOperandStr, *extraOperandStr;
   instructionNode *instructionNodePtr = (instructionNode *)calloc(1, sizeof(instructionNode));
 
-  printf("\n\t#########start to analyzing with the instruction: %s \n", token);
+  printf("\n\n\t############################NEW############################\n");
+  printf("\t#########start to analyzing with the instruction: %s \n", token);
   checkMemoryAllocation(instructionNodePtr);
   currentInstruction=getInstruction(token);
   if(!currentInstruction){
-    printf("\tERROR: \'%s\' is an unknown command (line %d).\n", token, fileLineNumber);
+    VERBOSE_PRINTING(fileLine,( "ERROR: \'%s\' is an unknown command\n", token));
     stopInstructionScan(instructionNodePtr, errorFlag);
     return;
   }
   /*otherwise - command is found and we start to analyze*/
   params = strtok(NULL, "\0");
   printf("\t#########params are: %s \n", params); /*TODO: take it off*/
-  if (!isLegalCommadConvention(params, fileLineNumber))
+  if (!isLegalCommadConvention(params, fileLine))
   {
     stopInstructionScan(instructionNodePtr, errorFlag);
     return;
@@ -355,7 +355,7 @@ void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, 
   if (label)
   {
     printf("added %s as a label\n", label);
-    addSymbol(label, *IC, true, false, false, false, fileLineNumber, errorFlag);
+    addSymbol(label, *IC, true, false, false, false, fileLine, errorFlag);
   }
   /*switch case*/
   setCommandWord(instructionNodePtr, currentInstruction, IC);
@@ -372,7 +372,7 @@ void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, 
 
     if (extraOperandStr)
     {
-      printf("\tERROR: This command has more than two parameters (line %d).\n", fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: The command \'%s\' got more than two parameters\n", instructionNodePtr->commandWord.name));
       stopInstructionScan(instructionNodePtr, errorFlag);
       return;
     }
@@ -381,12 +381,12 @@ void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, 
       if (sourceOperandStr && destinationOperandStr)
       {
         /*set each operand word*/
-        setOperandWord(errorFlag, instructionNodePtr, sourceOperandStr, fileLineNumber, true, IC);
-        setOperandWord(errorFlag, instructionNodePtr, destinationOperandStr, fileLineNumber, false, IC);
+        setOperandWord(errorFlag, instructionNodePtr, sourceOperandStr, fileLine, true, IC);
+        setOperandWord(errorFlag, instructionNodePtr, destinationOperandStr, fileLine, false, IC);
       }
       else
       {
-        printf("\tERROR: The command \'%s\' command has less than two parameters (line %d).\n", instructionNodePtr->commandWord.name, fileLineNumber);
+        VERBOSE_PRINTING(fileLine,( "ERROR: The command \'%s\' has less than two parameters\n", instructionNodePtr->commandWord.name));
         stopInstructionScan(instructionNodePtr, errorFlag);
         return;
       }
@@ -403,7 +403,7 @@ void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, 
 
     if (extraOperandStr)
     {
-      printf("\tERROR: The command \'%s\' has more than one parameter (line %d).\n", instructionNodePtr->commandWord.name, fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: The command \'%s\' has more than one parameter\n", instructionNodePtr->commandWord.name));      
       stopInstructionScan(instructionNodePtr, errorFlag);
       return;
     }
@@ -411,11 +411,11 @@ void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, 
     {
       if (destinationOperandStr)
       {
-        setOperandWord(errorFlag, instructionNodePtr, destinationOperandStr, fileLineNumber, false, IC);
+        setOperandWord(errorFlag, instructionNodePtr, destinationOperandStr, fileLine, false, IC);
       }
       else
       {
-        printf("\tERROR: The command \'%s\' did not receive a parameter (line %d).\n", instructionNodePtr->commandWord.name, fileLineNumber);
+        VERBOSE_PRINTING(fileLine,( "ERROR: The command \'%s\' did not receive a parameter\n", instructionNodePtr->commandWord.name));      
         stopInstructionScan(instructionNodePtr, errorFlag);
         return;
       }
@@ -426,7 +426,7 @@ void setInstructionWords(char *token, int fileLineNumber, int *IC, char *label, 
     extraOperandStr = strtok(NULL, " ,\t\0");
     if (extraOperandStr)
     {
-      printf("\tERROR: The command \'%s\' should not have parameters (line %d).\n", instructionNodePtr->commandWord.name, fileLineNumber);
+      VERBOSE_PRINTING(fileLine,( "ERROR: The command \'%s\' should not have parameters\n", instructionNodePtr->commandWord.name));      
       stopInstructionScan(instructionNodePtr, errorFlag);
       return;
     }
