@@ -333,9 +333,6 @@ void setInstructionWords(char *token, inputFileLine *fileLine, int *IC, char *la
   instruction *currentInstruction;
   char *params, *sourceOperandStr, *destinationOperandStr, *extraOperandStr;
   instructionNode *instructionNodePtr = (instructionNode *)calloc(1, sizeof(instructionNode));
-
-  printf("\n\n\t############################NEW############################\n");
-  printf("\t#########start to analyzing with the instruction: %s \n", token);
   checkMemoryAllocation(instructionNodePtr);
   currentInstruction=getInstruction(token);
   if(!currentInstruction){
@@ -345,7 +342,6 @@ void setInstructionWords(char *token, inputFileLine *fileLine, int *IC, char *la
   }
   /*otherwise - command is found and we start to analyze*/
   params = strtok(NULL, "\0");
-  printf("\t#########params are: %s \n", params); /*TODO: take it off*/
   if (!isLegalCommadConvention(params, fileLine))
   {
     stopInstructionScan(instructionNodePtr, errorFlag);
@@ -354,7 +350,6 @@ void setInstructionWords(char *token, inputFileLine *fileLine, int *IC, char *la
 
   if (label)
   {
-    printf("added %s as a label\n", label);
     addSymbol(label, *IC, true, false, false, false, fileLine, errorFlag);
   }
   /*switch case*/
@@ -365,11 +360,6 @@ void setInstructionWords(char *token, inputFileLine *fileLine, int *IC, char *la
     sourceOperandStr = strtok(params, " ,\t\0");
     destinationOperandStr = strtok(NULL, " ,\t\0");
     extraOperandStr = strtok(NULL, " ,\t\0");
-
-    printf("\n\t###sourceOperandStr is: *%s*\n", sourceOperandStr);
-    printf("\n\t###destinationOperandStr is: *%s*\n", destinationOperandStr);
-    printf("\n\t###extraOperandStr is: *%s*\n", extraOperandStr);
-
     if (extraOperandStr)
     {
       VERBOSE_PRINTING(fileLine,( "ERROR: The command \'%s\' got more than two parameters\n", instructionNodePtr->commandWord.name));
@@ -396,10 +386,6 @@ void setInstructionWords(char *token, inputFileLine *fileLine, int *IC, char *la
   case GETS_SINGLE_OPERAND:
     destinationOperandStr = strtok(params, " ,\t\0"); /*supposed to find the only the 0*/
     extraOperandStr = strtok(NULL, " ,\t\0");
-
-    printf("\n\t**destinationOperandStr is: *%s*\n", destinationOperandStr);
-    printf("\t**extraOperandStr is: *%s*\n", extraOperandStr);
-    printf("\t**params is: *%s*\n", params);
 
     if (extraOperandStr)
     {

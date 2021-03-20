@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   if (argc == 1)
   {
     /*means only the program name was gives, without any input file*/
-    printf("\terror: No input file received for running the program.\n");
+    printf("\tERROR: No input file received for running the program.\n");
   }
   else
   {
@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
       char fullFileName[MAX_FILENAME_LENGTH];
       strcpy(fullFileName, argv[fileIndex]); /*copy the filename from argv to the full filename string*/
       strcat(fullFileName, AS_EXTENSION);    /*add the .as extension to the full filename.*/
-      printf("\n\t###start to scan the file: %s###\n", fullFileName);
       /*Tries to open the file and if successful, runs the program*/
       if ((currentFile = openFile(argv[fileIndex], "r", AS_EXTENSION)))
       {

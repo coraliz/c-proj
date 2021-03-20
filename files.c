@@ -77,7 +77,6 @@ void exportDataToObjectFile(FILE *objectFilePtr)
   if (objectFilePtr)
   {
     dataNode *dataList = getHeadData();
-    printf("\t###starts the data\n");
     while (dataList)
     {
       fprintf(objectFilePtr, WORD_PRINT_LINE, dataList->address, MASK(dataList->machineCode), dataList->era);
@@ -154,6 +153,4 @@ void exportFiles(char *fileName, int IC, int DC)
   exportDataToObjectFile(objectFilePtr);
   exportEntriesFile(fileName);
   exportExternsFile(fileName, &hasExternLabel);
-  /*TODO: off*/
-  printf("\n\t~~~~~~~~~~~~~Success! files exported.~~~~~~~~~~~~~\n");
 }

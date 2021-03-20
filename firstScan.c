@@ -147,9 +147,9 @@ bool firstScan(FILE *fp, char *fileName, int *IC, int *DC)
     }
   }
   /*If the file is empty*/
-  if (fileLine == 0)
+  if (fileLine->lineNumber == 0)
   {
-    printf("ERROR: This file \'%s\' is empty\n", fileName);
+    printf("WARNING: This file \'%s\' is an empty file\n", fileName);
   }
   return (!hasError);
 }

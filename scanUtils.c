@@ -45,7 +45,6 @@ bool isDirective(char *token)
 bool isRegister(char *token)
 {
   int i;
-  printf("check: %s, len is: %ld, token[0] is: %c, token[1] is: %c\n", token, strlen(token), token[0], token[1]);
   if (strlen(token) == REGISTER_STR_LENGTH && token[0] == 'r' && isdigit((int)(token[1])))
   {
     for (i = 0; i < REGISTERS_COUNT; i++)
