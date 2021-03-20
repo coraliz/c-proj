@@ -1,93 +1,73 @@
 #include "header.h"
 #include "dataList.h"
-#include "entryList.h"
+#include "entriesList.h"
 #include "symbolsList.h"
-#include "wordsList.h"
+#include "instructionsList.h"
 #include "files.h"
-#include "firstPass.h"
-#include "secondPass.h"
+#include "firstScan.h"
+#include "secondScan.h"
+
+void removeFileWithExtension(char* fileName, char *fileExtension){
+  /*we don't care if the file deletion was successful*/
+  char fullFileName[MAX_FILENAME_LENGTH];
+  strcpy(fullFileName, fileName);
+  remove(strcat(fullFileName,fileExtension));
+}
 
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-  FILE *f = NULL; /*Pointer to input file*/
-  /*Index used to loop through the input files*/
-  int index;
-  /*Line counter*/
-  int IC = INTITIAL_IC_VALUE;
-  int DC = INTITIAL_DC_VALUE;
+  FILE *currentFile = NULL;   /*set the input file pointer*/
+  int fileIndex;              /*set current input file index*/
+  int IC = INITIAL_IC_VALUE; /*set code instruction counter with it's initial value*/
+  int DC = INITIAL_DC_VALUE; /*set data directive counter with it's initial value*/
 
-  /*Check if there are no arguments*/
-  if (argc == 1) /*mean only the program name was gives, without any input file*/
+  /*check if we have received files to run the program on*/
+  if (argc == 1)
   {
-    /*Print error to screen*/
-    printf("\tERROR: No passable file received for running the program.\n");
+    /*means only the program name was gives, without any input file*/
+    printf("\tERROR: No input file received for running the program.\n");
   }
   else
   {
-    /*going through each of the files provided to the program*/
-    for (index = 1; index < argc; index++)
+    /*now we will now run the program on each of the input file*/
+    for (fileIndex = 1; fileIndex < argc; fileIndex++)
     {
-      printf("%s.as: ", argv[index]);
+      /*
+      char fullFileName[MAX_FILENAME_LENGTH];
+      strcpy(fullFileName, argv[fileIndex]); //copy the filename from argv to the full filename string
+      strcat(fullFileName, AS_EXTENSION);    //add the .as extension to the full filename.
+      printf("\n\t###start to scan the file: %s###\n", fullFileName);
+      */
       /*Tries to open the file and if successful, runs the program*/
-      if ((f = openFile(argv[index], "r", AS_EXTENSION)))
+      if ((currentFile = openFile(argv[fileIndex], "r", AS_EXTENSION)))
       {
-        if(firstPass(f, &IC, &DC)){
-          printf("\n\n\t######################successful first######################\n");
+        /*remove any remains of previous executions*/
+        removeFileWithExtension(argv[fileIndex], OB_EXTENSION);
+        removeFileWithExtension(argv[fileIndex], ENT_EXTENSION);
+        removeFileWithExtension(argv[fileIndex], EXT_EXTENSION);
+        /*we will continue to run the code only if the first scan was successful, 
+        otherwise we have code errors*/
+        if (firstScan(currentFile, argv[fileIndex], &IC, &DC))
+        {
+          /*add the value of IC for the existing values ​​in the data image*/
           updateDataSymbols(IC);
           updateDataAddresses(IC);
-          if(secondPass(IC, DC)){
-            exportFiles(IC, DC, argv[index]);
-            printf("\n\n\t######################successful run######################\n");
-          }
-          else{
-            printf("\n\n\t######################failded second pass######################\n");
+          /*we will export all of our information to files only if the second scan was successful, 
+          otherwise we have code errors*/
+          if (secondScan(IC, DC))
+          {
+            exportFiles(argv[fileIndex], (IC - INITIAL_IC_VALUE), DC); /* did IC-INTITIAL_IC_VALUE to get the instructions count*/
           }
         }
-        else{
-          printf("\n\n\t######################failded first pass######################\n");
-        }
-        /*Cleanup*/
+        /*release all the structures we used during the program run*/
         freeData();
         freeSymbols();
         freeEntries();
-        freeWords();
-        fclose(f);
-      } /*end the condition that checks if the file can be opened*/
-    } /*end of single file scanning*/
-  } /*end of files scanning*/
-  printf("\n\n\t######################finished main######################");
+        freeInstructions();
+        fclose(currentFile);
+      } /*end the condition that checks if the file can be opened*, if it won't it continue the next file*/
+    }   /*end of single file scanning*/
+  }     /*end of files scanning*/
   return 0;
-} /*end of main*/
-
-
-
-
-/*
-        firstPass(f, &IC, &DC);
-        if (hasError()){
-          printf("\n\t###MAIN: finished first pass with errors!##\n");
-        }
-        printf("\n\t###MAIN: first pass success##\n");
-        updateDataSymbols(IC);
-        updateDataAddresses(IC);
-        //Second pass
-        secondPass(IC, DC);
-        if (hasError()){
-          printf("\t###MAIN: finished second pass with errors!##\n");
-        }
-        printf("\t###MAIN: finished the whole running, next is to check if there are errors\n");
-        //If there were no errors, export the files
-        if (!hasError()){
-          exportFiles(IC, DC, argv[index]);
-        }
-        else{
-          printErrors(argv[index]);
-          //Free the errors list
-          freeErrors();
-        }        
-      }
-    }
-  }
-  return 0;
-}*/
+}

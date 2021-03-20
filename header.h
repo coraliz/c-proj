@@ -29,52 +29,26 @@ How it works:
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
-
+#include "generalUtils.h" /*TODO: ask Tomer*/
 
 /*boolean enum*/
 typedef enum booleans {false=0, true=1} bool;
-/*Directive enum - used during the first pass to determine which directive has been recieved.*/
-typedef enum directiveTypes {NOT_A_DIRECTIVE, DATA_DIRECTIVE, STRING_DIRECTIVE, ENTRY_DIRECTIVE, EXTERN_DIRECTIVE, UNDEFINED_DIRECTIVE} directiveType;
-/*the values also represents the addresing method, ecept to label which is not a method*/
-enum operandTypes {NONE=-1, IMMEDIATE=0, DIRECT=1, RELATIVE=2, REGISTER=3, LABEL=4};
-/*A->absolute, RELOCATABLE->relative, EXTERNAL->external/entry*/
-typedef enum eraTypes {ABSOLUTE='A', RELOCATABLE='R', EXTERNAL='E'} eraTypes;
 
+/*defines*/
+#define INITIAL_IC_VALUE 100 
+#define INITIAL_DC_VALUE 0 
+#define DECIMAL_BASE 10
 
-/*Directive string constants, to be compared with input*/
-#define DATA_DIRECTIVE_STR ".data"
-#define STRING_DIRECTIVE_STR ".string"
-#define ENTRY_DIRECTIVE_STR ".entry"
-#define EXTERN_DIRECTIVE_STR ".extern"
+/*Maximum and minimum values that can be stored in 12 bits*/
+#define MAX_NUMBER_VALUE 2047
+#define MIN_NUMBER_VALUE -2048
 
-/*Maximum line buffer size*/
-#define MAX_FILENAME_LENGTH 1000
-#define MAX_LINE_LENGTH 81
-#define MAX_LABEL_LENGTH 31 /* the length including the ':' is 31 but I took this off during the code*/
-
+#define MAX_LINE_LENGTH 81 /*maximum line buffer size- includes the char '\n' */
+#define MAX_LABEL_LENGTH 31 /*count the '/0' char*/
 #define EXTERNAL_SYMBOL_ADDRESS 0
 
+/*era types as enum - A->absolute, RELOCATABLE->relative, EXTERNAL->external/entry*/
+typedef enum eraTypes {ABSOLUTE='A', RELOCATABLE='R', EXTERNAL='E'} eraType;
 
-/*Number of registers*/
-
-#define INTITIAL_IC_VALUE 100 
-#define INTITIAL_DC_VALUE 0 
-
-/*Maximum and minimum values that can be stored in 10 bits*/
-#define MAX_NUMBER_VALUE 2047 /*todo: how??*/
-#define MIN_NUMBER_VALUE -2048
-/*Amount of opcodes*/
-
-/*Opcodes*/
-#define MOV_STR "mov"
-#define CMP_STR "cmp"
-#define ADD_STR "add"
-#define SUB_STR "sub"
-#define LEA_STR "lea"
-#define JMP_STR "jmp"
-#define BNE_STR "bne"
-#define PRN_STR "prn"
-#define JSR_STR "jsr"
 
 #endif
